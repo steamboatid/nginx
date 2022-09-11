@@ -1,4 +1,19 @@
 #!/usr/bin/make -f
+# -*- makefile -*-
+
+#----------------- dkverbosev2
+DH_VERBOSE=1
+export DH_VERBOSE
+export DH_OPTIONS
+export DEB_BUILD_OPTIONS
+export DEB_BUILD_PROFILES
+export DPKG_EXPORT_BUILDFLAGS
+export SHELL
+export DEB_CFLAGS_MAINT_APPEND
+export DEB_LDFLAGS_MAINT_APPEND
+#----------------- end
+
+#!/usr/bin/make -f
 #export DH_VERBOSE=1
 
 export LUAJIT_INC=/usr/include/luajit-2.1
@@ -155,7 +170,6 @@ core_configure_flags := \
 			--with-stream_ssl_module \
 			--with-mail=dynamic \
 			--with-mail_ssl_module \
-			--add-dynamic-module=$(MODULESDIR)/http-ndk \
 
 full_configure_flags := \
 			$(common_configure_flags) \
@@ -273,45 +287,45 @@ static_configure_flags := \
 			--with-stream_geoip_module \
 			--with-stream_ssl_module \
 			--with-stream_ssl_preread_module \
-			--add-module=$(MODULESDIR)=debian/modules/http-ndk \
+			--add-module=$(MODULESDIR)/http-ndk \
 			\
-			--add-module=$(MODULESDIR)=debian/modules/http-sticky \
-			--add-module=$(MODULESDIR)=debian/modules/http-subs-filter \
-			--add-module=$(MODULESDIR)=debian/modules/http-google-filter \
-			--add-module=$(MODULESDIR)=debian/modules/http-vhost-traffic-status \
-			--add-module=$(MODULESDIR)=debian/modules/naxsi/naxsi_src \
+			--add-module=$(MODULESDIR)/http-sticky \
+			--add-module=$(MODULESDIR)/http-subs-filter \
+			--add-module=$(MODULESDIR)/http-google-filter \
+			--add-module=$(MODULESDIR)/http-vhost-traffic-status \
+			--add-module=$(MODULESDIR)/naxsi/naxsi_src \
 			\
-			--add-module=$(MODULESDIR)=debian/modules/http-auth-pam \
-			--add-module=$(MODULESDIR)=debian/modules/http-cache-purge \
-			--add-module=$(MODULESDIR)=debian/modules/http-dav-ext \
-			--add-module=$(MODULESDIR)=debian/modules/http-echo \
-			--add-module=$(MODULESDIR)=debian/modules/http-fancyindex \
-			--add-module=$(MODULESDIR)=debian/modules/http-headers-more-filter \
-			--add-module=$(MODULESDIR)=debian/modules/http-uploadprogress \
-			--add-module=$(MODULESDIR)=debian/modules/http-upstream-fair \
-			--add-module=$(MODULESDIR)=debian/modules/nchan \
-			--add-module=$(MODULESDIR)=debian/modules/rtmp \
+			--add-module=$(MODULESDIR)/http-auth-pam \
+			--add-module=$(MODULESDIR)/http-cache-purge \
+			--add-module=$(MODULESDIR)/http-dav-ext \
+			--add-module=$(MODULESDIR)/http-echo \
+			--add-module=$(MODULESDIR)/http-fancyindex \
+			--add-module=$(MODULESDIR)/http-headers-more-filter \
+			--add-module=$(MODULESDIR)/http-uploadprogress \
+			--add-module=$(MODULESDIR)/http-upstream-fair \
+			--add-module=$(MODULESDIR)/nchan \
+			--add-module=$(MODULESDIR)/rtmp \
 			\
-			--add-module=$(MODULESDIR)=debian/modules/http-accept-language \
-			--add-module=$(MODULESDIR)=debian/modules/http-auth-ldap \
-			--add-module=$(MODULESDIR)=debian/modules/http-bot-verifier \
-			--add-module=$(MODULESDIR)=debian/modules/http-brotli \
-			--add-module=$(MODULESDIR)=debian/modules/http-cookie-flag-filter \
-			--add-module=$(MODULESDIR)=debian/modules/http-doh \
-			--add-module=$(MODULESDIR)=debian/modules/http-enhanced-memcached \
-			--add-module=$(MODULESDIR)=debian/modules/http-immutable \
-			--add-module=$(MODULESDIR)=debian/modules/http-memc \
-			--add-module=$(MODULESDIR)=debian/modules/http-push-stream \
-			--add-module=$(MODULESDIR)=debian/modules/http-redis2 \
-			--add-module=$(MODULESDIR)=debian/modules/http-security-headers \
-			--add-module=$(MODULESDIR)=debian/modules/http-set-misc \
-			--add-module=$(MODULESDIR)=debian/modules/http-slowfs \
-			--add-module=$(MODULESDIR)=debian/modules/http-srcache-filter \
-			--add-module=$(MODULESDIR)=debian/modules/http-sysguard \
-			--add-module=$(MODULESDIR)=debian/modules/http-testcookie-access \
-			--add-module=$(MODULESDIR)=debian/modules/http-upstream-check \
-			--add-module=$(MODULESDIR)=debian/modules/http-webp \
-			--add-module=$(MODULESDIR)=debian/modules/ssl-ct \
+			--add-module=$(MODULESDIR)/http-accept-language \
+			--add-module=$(MODULESDIR)/http-auth-ldap \
+			--add-module=$(MODULESDIR)/http-bot-verifier \
+			--add-module=$(MODULESDIR)/http-brotli \
+			--add-module=$(MODULESDIR)/http-cookie-flag-filter \
+			--add-module=$(MODULESDIR)/http-doh \
+			--add-module=$(MODULESDIR)/http-enhanced-memcached \
+			--add-module=$(MODULESDIR)/http-immutable \
+			--add-module=$(MODULESDIR)/http-memc \
+			--add-module=$(MODULESDIR)/http-push-stream \
+			--add-module=$(MODULESDIR)/http-redis2 \
+			--add-module=$(MODULESDIR)/http-security-headers \
+			--add-module=$(MODULESDIR)/http-set-misc \
+			--add-module=$(MODULESDIR)/http-slowfs \
+			--add-module=$(MODULESDIR)/http-srcache-filter \
+			--add-module=$(MODULESDIR)/http-sysguard \
+			--add-module=$(MODULESDIR)/http-testcookie-access \
+			--add-module=$(MODULESDIR)/http-upstream-check \
+			--add-module=$(MODULESDIR)/http-webp \
+			--add-module=$(MODULESDIR)/ssl-ct \
 
 %:
 	dh $@ --without autoreconf
@@ -326,13 +340,13 @@ override_dh_clean:          clean_patch_modules $(foreach flavour,$(FLAVOURS),cl
 
 override_dh_install:
 	dh_install
-	DH_AUTOSCRIPTDIR=$(CURDIR)/debian/autoscripts debian/dh_nginx
+	DH_AUTOSCRIPTDIR=$(CURDIR)/debian/autoscripts debian/debhelper/dh_nginx --in-nginx-tree
 
 override_dh_installinit:
 	dh_installinit --no-stop-on-upgrade --no-start --name=nginx || true
 
-override_dh_systemd_enable:
-	dh_systemd_enable --name=nginx
+override_dh_installsystemd:
+	dh_installsystemd --name=nginx
 
 override_dh_installlogrotate:
 	dh_installlogrotate --package nginx-common --name=nginx
@@ -388,6 +402,12 @@ config.arch.%:
 	cp -Pa $(CURDIR)/src $(BUILDDIR_$*)/
 	cp -Pa $(CURDIR)/man $(BUILDDIR_$*)/
 	cd $(BUILDDIR_$*) && ./configure $($*_configure_flags)
+	if [ "$(BUILDDIR_$*)" = "$(BUILDDIR_extras)" ] || \
+	   [ "$(BUILDDIR_$*)" = "$(BUILDDIR_full)" ] || \
+	   [ "$(BUILDDIR_$*)" = "$(BUILDDIR_static)" ]; then \
+	  have="NDK_SET_VAR"; \
+	  /bin/echo -e "#ifndef $$have\n#define $$have  1\n#endif" >> $(BUILDDIR_$*)/objs/ngx_auto_config.h; \
+	fi
 
 config.src:
 	dh_testdir
@@ -408,5 +428,11 @@ clean.njs:
 
 clean.%:
 	rm -rf $(BUILDDIR_$*)
+
+
+
+override_dh_shlibdeps: 
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info 
+
 
 .PHONY: config_patch_modules clean_patch_modules
