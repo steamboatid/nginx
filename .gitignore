@@ -48,6 +48,9 @@ test_all
 *.trs
 tags
 
+.vscode
+.vscode/*
+
 # netbeans project
 #===========================================================================
 nbproject
