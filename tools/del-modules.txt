@@ -1,0 +1,38 @@
+# https://github.com/sto/ngx_http_auth_pam_module
+update_rename "sto/ngx_http_auth_pam_module" "http-auth-pam"  >/dev/null 2>&1 &
+
+# https://github.com/FRiCKLE/ngx_cache_purge
+update_rename "FRiCKLE/ngx_cache_purge" "http-cache-purge"  >/dev/null 2>&1 &
+
+# https://github.com/arut/nginx-dav-ext-module
+update_rename "arut/nginx-dav-ext-module" "http-dav-ext"  >/dev/null 2>&1 &
+
+# https://github.com/agentzh/echo-nginx-module
+update_rename "agentzh/echo-nginx-module" "http-echo"  >/dev/null 2>&1 &
+
+# https://github.com/aperezdc/ngx-fancyindex
+update_rename "aperezdc/ngx-fancyindex" "http-fancyindex"  >/dev/null 2>&1 &
+
+# https://github.com/leev/ngx_http_geoip2_module
+update_rename "leev/ngx_http_geoip2_module" "http-geoip2"  >/dev/null 2>&1 &
+
+# https://github.com/agentzh/headers-more-nginx-module
+update_rename "agentzh/headers-more-nginx-module" "http-headers-more-filter"  >/dev/null 2>&1 &
+
+# https://github.com/simpl/ngx_devel_kit
+update_rename "simpl/ngx_devel_kit" "http-ndk"  >/dev/null 2>&1 &
+
+# https://github.com/yaoweibin/ngx_http_substitutions_filter_module
+update_rename "yaoweibin/ngx_http_substitutions_filter_module" "http-subs-filter"  >/dev/null 2>&1 &
+
+# https://github.com/masterzen/nginx-upload-progress-module
+update_rename "masterzen/nginx-upload-progress-module" "http-uploadprogress"  >/dev/null 2>&1 &
+
+# https://github.com/gnosek/nginx-upstream-fair
+update_rename "gnosek/nginx-upstream-fair" "http-upstream-fair"  >/dev/null 2>&1 &
+
+# https://github.com/slact/nchan
+update_only "slact/nchan"  >/dev/null 2>&1 &
+
+# https://github.com/arut/nginx-rtmp-module
+update_rename "arut/nginx-rtmp-module" "rtmp"  >/dev/null 2>&1 &

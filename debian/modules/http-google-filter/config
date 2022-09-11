@@ -1,0 +1,28 @@
+ngx_addon_name=ngx_http_google_filter_module
+
+ngx_feature_libs="-lm"
+
+ngx_module_incs=$ngx_addon_dir/src
+
+have=NGX_HTTP_UPSYNC . auto/have
+
+if test -n "$ngx_module_link"; then
+	ngx_module_type=FILTER
+	ngx_module_name=$ngx_addon_name
+	ngx_module_srcs="$ngx_addon_dir/src/*.c"
+	ngx_module_deps="$ngx_addon_dir/src/*.h"
+	ngx_module_libs=$ngx_feature_libs
+	ngx_module_order="ngx_http_subs_filter_module $ngx_module_name"
+
+	. auto/module
+else
+	HTTP_AUX_FILTER_MODULES="$HTTP_AUX_FILTER_MODULES $ngx_addon_name ngx_http_subs_filter_module"
+	HTTP_MODULES="$HTTP_MODULES $ngx_addon_name ngx_http_subs_filter_module"
+	HTTP_FILTER_MODULES="$HTTP_FILTER_MODULES $ngx_addon_name ngx_http_subs_filter_module"
+
+	NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/src/*.c"
+	NGX_ADDON_DEPS="$NGX_ADDON_DEPS $ngx_addon_dir/src/*.h"
+
+  CORE_LIBS="$CORE_LIBS $ngx_feature_libs"
+  CORE_INCS="$CORE_INCS $ngx_module_incs"
+fi

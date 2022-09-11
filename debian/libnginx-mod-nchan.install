@@ -1,0 +1,2 @@
+debian/modules/nchan/*.js usr/share/doc/libnginx-mod-nchan
+debian/modules/nchan/*.md usr/share/doc/libnginx-mod-nchan

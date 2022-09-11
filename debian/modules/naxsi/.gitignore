@@ -1,0 +1,6 @@
+*.tar.gz
+*.asc
+nginx-source
+nginx-tmp
+*.log
+.scripts/.tmp/

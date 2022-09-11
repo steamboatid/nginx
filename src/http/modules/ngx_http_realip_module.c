@@ -134,8 +134,9 @@ ngx_http_realip_handler(ngx_http_request_t *r)
     ngx_str_t                   *value;
     ngx_uint_t                   i, hash;
     ngx_addr_t                   addr;
+    ngx_array_t                 *xfwd;
     ngx_list_part_t             *part;
-    ngx_table_elt_t             *header, *xfwd;
+    ngx_table_elt_t             *header;
     ngx_connection_t            *c;
     ngx_http_realip_ctx_t       *ctx;
     ngx_http_realip_loc_conf_t  *rlcf;
@@ -167,9 +168,9 @@ ngx_http_realip_handler(ngx_http_request_t *r)
 
     case NGX_HTTP_REALIP_XFWD:
 
-        xfwd = r->headers_in.x_forwarded_for;
+        xfwd = &r->headers_in.x_forwarded_for;
 
-        if (xfwd == NULL) {
+        if (xfwd->elts == NULL) {
             return NGX_DECLINED;
         }
 

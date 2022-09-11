@@ -1,0 +1,225 @@
+README for Modules versions
+---------------------------
+
+This file lists third party modules built with nginx in Debian, homepage and
+version.
+
+Total: 43 modules
+
+ ngx_waf 
+  Homepage:     (https://github.com/ADD-SP/ngx_waf) 
+  Commit Date:  Wed 05 Jan 2022 01:40:19 PM WIB (epoch: 1641364819) 
+  Commit URL:   [922599e] (https://github.com/ADD-SP/ngx_waf/commit/922599eb473e232d7550d6ff63c4bfa18add5205) 
+
+ ngx_echo 
+  Homepage:     (https://github.com/agentzh/echo-nginx-module) 
+  Commit Date:  Thu 11 Nov 2021 04:20:04 PM WIB (epoch: 1636622404) 
+  Commit URL:   [267d0e3] (https://github.com/openresty/echo-nginx-module/commit/267d0e3e8c77b1a55bee9677299908eb34815146) 
+
+ ngx_headers_more 
+  Homepage:     (https://github.com/agentzh/headers-more-nginx-module) 
+  Commit Date:  Sat 16 Oct 2021 09:41:54 AM WIB (epoch: 1634352114) 
+  Commit URL:   [a4a0686] (https://github.com/openresty/headers-more-nginx-module/commit/a4a0686605161a6777d7d612d5aef79b9e7c13e0) 
+
+ ngx_cookie_flag 
+  Homepage:     (https://github.com/AirisX/nginx_cookie_flag_module) 
+  Commit Date:  Tue 19 Dec 2017 07:58:54 PM WIB (epoch: 1513688334) 
+  Commit URL:   [c4ff449] (https://github.com/AirisX/nginx_cookie_flag_module/commit/c4ff449318474fbbb4ba5f40cb67ccd54dc595d4) 
+
+ ngx_fancyindex 
+  Homepage:     (https://github.com/aperezdc/ngx-fancyindex) 
+  Commit Date:  Fri 29 Oct 2021 02:37:48 AM WIB (epoch: 1635449868) 
+  Commit URL:   [5930c29] (https://github.com/aperezdc/ngx-fancyindex/commit/5930c29d6a97787c101cee63b62f6eaa2945bd96) 
+
+ ngx_dav_ext 
+  Homepage:     (https://github.com/arut/nginx-dav-ext-module) 
+  Commit Date:  Mon 17 Dec 2018 03:45:12 PM WIB (epoch: 1545036312) 
+  Commit URL:   [f5e3088] (https://github.com/arut/nginx-dav-ext-module/commit/f5e30888a256136d9c550bf1ada77d6ea78a48af) 
+
+ ngx_rtmp 
+  Homepage:     (https://github.com/arut/nginx-rtmp-module) 
+  Commit Date:  Tue 25 May 2021 02:42:16 PM WIB (epoch: 1621928536) 
+  Commit URL:   [23e1873] (https://github.com/arut/nginx-rtmp-module/commit/23e1873aa62acb58b7881eed2a501f5bf35b82e9) 
+
+ ngx_http_enhanced_memcached 
+  Homepage:     (https://github.com/bpaquet/ngx_http_enhanced_memcached_module) 
+  Commit Date:  Wed 30 May 2018 09:39:46 AM WIB (epoch: 1527647986) 
+  Commit URL:   [b58a450] (https://github.com/bpaquet/ngx_http_enhanced_memcached_module/commit/b58a4500db3c4ee274be54a18abc767219dcfd36) 
+
+ ngx_slowfs_cache 
+  Homepage:     (https://github.com/dvershinin/ngx_slowfs_cache) 
+  Commit Date:  Wed 03 Aug 2016 06:18:03 PM WIB (epoch: 1470223083) 
+  Commit URL:   [ec5c925] (https://github.com/dvershinin/ngx_slowfs_cache/commit/ec5c9257a571839f93f56f863af8728c923839e8) 
+
+ ngx_webp 
+  Homepage:     (https://github.com/dvershinin/ngx_webp) 
+  Commit Date:  Tue 31 Dec 2019 06:33:24 AM WIB (epoch: 1577748804) 
+  Commit URL:   [765f008] (https://github.com/dvershinin/ngx_webp/commit/765f00879ef1fcf0901d33f126e0ffcdbc5e2f1f) 
+
+ ngx_cache_purge 
+  Homepage:     (https://github.com/FRiCKLE/ngx_cache_purge) 
+  Commit Date:  Tue 23 Dec 2014 07:01:15 PM WIB (epoch: 1419336075) 
+  Commit URL:   [331fe43] (https://github.com/FRiCKLE/ngx_cache_purge/commit/331fe43e8d9a3d1fa5e0c9fec7d3201d431a9177) 
+
+ ngx_http_google_filter 
+  Homepage:     (https://github.com/GetPageSpeed/ngx_http_google_filter_module) 
+  Commit Date:  Fri 05 Jul 2019 05:04:28 PM WIB (epoch: 1562321068) 
+  Commit URL:   [f92e87e] (https://github.com/GetPageSpeed/ngx_http_google_filter_module/commit/f92e87e84244b021a57212d6466af8a123c0e60c) 
+
+ ngx_immutable 
+  Homepage:     (https://github.com/GetPageSpeed/ngx_immutable) 
+  Commit Date:  Sat 22 Feb 2020 08:04:58 PM WIB (epoch: 1582376698) 
+  Commit URL:   [0f07107] (https://github.com/GetPageSpeed/ngx_immutable/commit/0f07107764b19718266237e8ceac499a4cc7329f) 
+
+ ngx_security_headers 
+  Homepage:     (https://github.com/GetPageSpeed/ngx_security_headers) 
+  Commit Date:  Mon 15 Mar 2021 12:40:48 PM WIB (epoch: 1615786848) 
+  Commit URL:   [a4f1017] (https://github.com/GetPageSpeed/ngx_security_headers/commit/a4f1017f0e706bfdb2a4f5b20e0023d138148504) 
+
+ ngx_upstream_fair 
+  Homepage:     (https://github.com/gnosek/nginx-upstream-fair) 
+  Commit Date:  Sun 08 Apr 2012 09:03:04 PM WIB (epoch: 1333893784) 
+  Commit URL:   [a18b409] (https://github.com/gnosek/nginx-upstream-fair/commit/a18b4099fbd458111983200e098b6f0c8efed4bc) 
+
+ ngx_brotli 
+  Homepage:     (https://github.com/google/ngx_brotli) 
+  Commit Date:  Tue 06 Oct 2020 02:40:22 PM WIB (epoch: 1601970022) 
+  Commit URL:   [9aec15e] (https://github.com/google/ngx_brotli/commit/9aec15e2aa6feea2113119ba06460af70ab3ea62) 
+
+ ngx_ct 
+  Homepage:     (https://github.com/grahamedgecombe/nginx-ct) 
+  Commit Date:  Sun 23 Jul 2017 07:03:35 PM WIB (epoch: 1500811415) 
+  Commit URL:   [93e9884] (https://github.com/grahamedgecombe/nginx-ct/commit/93e9884764b77300236fd878ae284f2a40314f38) 
+
+ ngx_auth_ldap 
+  Homepage:     (https://github.com/kvspb/nginx-auth-ldap) 
+  Commit Date:  Tue 28 Apr 2020 04:35:00 PM WIB (epoch: 1588066500) 
+  Commit URL:   [83c059b] (https://github.com/kvspb/nginx-auth-ldap/commit/83c059b73566c2ee9cbda920d91b66657cf120b7) 
+
+ ngx_testcookie 
+  Homepage:     (https://github.com/kyprizel/testcookie-nginx-module) 
+  Commit Date:  Thu 30 Jul 2020 07:03:36 PM WIB (epoch: 1596110616) 
+  Commit URL:   [5113746] (https://github.com/kyprizel/testcookie-nginx-module/commit/51137466b12b2b023f0208a0b6a1bc9c0e805618) 
+
+ ngx_http_geoip2 
+  Homepage:     (https://github.com/leev/ngx_http_geoip2_module) 
+  Commit Date:  Thu 03 Dec 2020 04:54:57 AM WIB (epoch: 1606946097) 
+  Commit URL:   [a26c6be] (https://github.com/leev/ngx_http_geoip2_module/commit/a26c6beed77e81553686852dceb6c7fdacc5970d) 
+
+ ngx_upload_progress 
+  Homepage:     (https://github.com/masterzen/nginx-upload-progress-module) 
+  Commit Date:  Fri 24 Dec 2021 10:53:38 PM WIB (epoch: 1640361218) 
+  Commit URL:   [68b3ab3] (https://github.com/masterzen/nginx-upload-progress-module/commit/68b3ab3b64a0cee7f785d161401c8be357bbed12) 
+
+ naxsi 
+  Homepage:     (https://github.com/nbs-system/naxsi) 
+  Commit Date:  Fri 05 Nov 2021 09:47:20 PM WIB (epoch: 1636123640) 
+  Commit URL:   [2802c22] (https://github.com/nbs-system/naxsi/commit/2802c22f05150c87dfcc06a9e8cd67e1ffc21a50) 
+
+ njs 
+  Homepage:     (https://github.com/nginx/njs) 
+  Commit Date:  Thu 30 Dec 2021 01:26:40 AM WIB (epoch: 1640802400) 
+  Commit URL:   [dc20777] (https://github.com/nginx/njs/commit/dc207775a557eef78c57d7b04b3e64d1804dc937) 
+
+ ngx_lua 
+  Homepage:     (https://github.com/openresty/lua-nginx-module) 
+  Commit Date:  Tue 04 Jan 2022 01:54:16 PM WIB (epoch: 1641279256) 
+  Commit URL:   [320f030] (https://github.com/openresty/lua-nginx-module/commit/320f030785e901e4310cb75607541240a771f5af) 
+
+ ngx_memc 
+  Homepage:     (https://github.com/openresty/memc-nginx-module) 
+  Commit Date:  Fri 15 Oct 2021 10:18:30 PM WIB (epoch: 1634311110) 
+  Commit URL:   [c507601] (https://github.com/openresty/memc-nginx-module/commit/c507601211b971fc8b22ed2ce642c80b154791f6) 
+
+ ngx_redis2 
+  Homepage:     (https://github.com/openresty/redis2-nginx-module) 
+  Commit Date:  Tue 19 Oct 2021 05:08:25 PM WIB (epoch: 1634638105) 
+  Commit URL:   [7c979c7] (https://github.com/openresty/redis2-nginx-module/commit/7c979c71e6f6c97f3ad5be7fb7f50ae4f800d76b) 
+
+ ngx_set_misc 
+  Homepage:     (https://github.com/openresty/set-misc-nginx-module) 
+  Commit Date:  Fri 10 Dec 2021 06:45:25 PM WIB (epoch: 1639136725) 
+  Commit URL:   [3ea2139] (https://github.com/openresty/set-misc-nginx-module/commit/3ea21393340a22a6a4dc3f9c1e07b3aac26a5c56) 
+
+ ngx_srcache 
+  Homepage:     (https://github.com/openresty/srcache-nginx-module) 
+  Commit Date:  Fri 15 Oct 2021 10:20:46 PM WIB (epoch: 1634311246) 
+  Commit URL:   [d702489] (https://github.com/openresty/srcache-nginx-module/commit/d702489a645089a9d3f5788ad2245b9e15c4f71a) 
+
+ ngx_stream_lua 
+  Homepage:     (https://github.com/openresty/stream-lua-nginx-module) 
+  Commit Date:  Mon 06 Dec 2021 07:25:48 AM WIB (epoch: 1638750348) 
+  Commit URL:   [e3d9af3] (https://github.com/openresty/stream-lua-nginx-module/commit/e3d9af3f9190ef7be9601ecc07d7518874ec282d) 
+
+ ngx_sticky 
+  Homepage:     (https://github.com/Refinitiv/nginx-sticky-module-ng) 
+  Commit Date:  Thu 05 Dec 2019 08:49:00 PM WIB (epoch: 1575553740) 
+  Commit URL:   [b14e985] (https://github.com/Refinitiv/nginx-sticky-module-ng/commit/b14e985ba1c71f77e155e33e9b8c558dc4e90c59) 
+
+ ngx_bot_verifier 
+  Homepage:     (https://github.com/repsheet/ngx_bot_verifier) 
+  Commit Date:  Fri 12 Jul 2019 10:20:01 AM WIB (epoch: 1562901601) 
+  Commit URL:   [c23bb55] (https://github.com/repsheet/ngx_bot_verifier/commit/c23bb55ce3597999723f3d7e01fb4389bc6bc463) 
+
+ ngx_devel_kit 
+  Homepage:     (https://github.com/simpl/ngx_devel_kit) 
+  Commit Date:  Sun 28 Jan 2018 12:39:01 AM WIB (epoch: 1517074741) 
+  Commit URL:   [a22dade] (https://github.com/vision5/ngx_devel_kit/commit/a22dade76c838e5f377d58d007f65d35b5ce1df3) 
+
+ nchan 
+  Homepage:     (https://github.com/slact/nchan) 
+  Commit Date:  Tue 28 Dec 2021 01:00:51 AM WIB (epoch: 1640628051) 
+  Commit URL:   [7994951] (https://github.com/slact/nchan/commit/7994951e86a85592b20ff8003891acbb838f6426) 
+
+ ngx_accept_language 
+  Homepage:     (https://github.com/steamboatid/nginx_accept_language_module) 
+  Commit Date:  Wed 08 Sep 2021 10:38:41 AM WIB (epoch: 1631072321) 
+  Commit URL:   [f76e453] (https://github.com/steamboatid/nginx_accept_language_module/commit/f76e45338cf987babccf989b0b98861304af66bb) 
+
+ ngx_http_auth_pam 
+  Homepage:     (https://github.com/sto/ngx_http_auth_pam_module) 
+  Commit Date:  Tue 24 Aug 2021 02:08:12 AM WIB (epoch: 1629745692) 
+  Commit URL:   [c7a2c93] (https://github.com/sto/ngx_http_auth_pam_module/commit/c7a2c937fb86f1e4010d5b7b55f83968ec262546) 
+
+ ngx_doh 
+  Homepage:     (https://github.com/themagister/Nginx-DOH-Module) 
+  Commit Date:  Fri 06 Aug 2021 05:18:14 AM WIB (epoch: 1628201894) 
+  Commit URL:   [c711c30] (https://github.com/themagister/Nginx-DOH-Module/commit/c711c30517d7ecaba95f34e7d4385fdcaaa9a820) 
+
+ ngx_sysguard 
+  Homepage:     (https://github.com/vozlt/nginx-module-sysguard) 
+  Commit Date:  Tue 21 Mar 2017 03:20:13 PM WIB (epoch: 1490084413) 
+  Commit URL:   [e512897] (https://github.com/vozlt/nginx-module-sysguard/commit/e512897f5aba4f79ccaeeebb51138f1704a58608) 
+
+ ngx_vts 
+  Homepage:     (https://github.com/vozlt/nginx-module-vts) 
+  Commit Date:  Wed 10 Feb 2021 08:39:17 AM WIB (epoch: 1612921157) 
+  Commit URL:   [3c6cf41] (https://github.com/vozlt/nginx-module-vts/commit/3c6cf41315bfcb48c35a3a0be81ddba6d0d01dac) 
+
+ ngx_push_stream 
+  Homepage:     (https://github.com/wandenberg/nginx-push-stream-module) 
+  Commit Date:  Sun 12 Dec 2021 02:00:34 AM WIB (epoch: 1639249234) 
+  Commit URL:   [d957d66] (https://github.com/wandenberg/nginx-push-stream-module/commit/d957d66d2e3dd20efd272736318296db72284b9e) 
+
+ ngx_upsync 
+  Homepage:     (https://github.com/weibocom/nginx-upsync-module) 
+  Commit Date:  Wed 07 Oct 2020 07:48:29 PM WIB (epoch: 1602074909) 
+  Commit URL:   [63733af] (https://github.com/weibocom/nginx-upsync-module/commit/63733af4cce877c986f08b3b5aa85a7a6a3cd143) 
+
+ ngx_stream_upsync 
+  Homepage:     (https://github.com/xiaokai-wang/nginx-stream-upsync-module) 
+  Commit Date:  Fri 03 Jan 2020 12:20:54 AM WIB (epoch: 1577985654) 
+  Commit URL:   [d403a5b] (https://github.com/xiaokai-wang/nginx-stream-upsync-module/commit/d403a5b644c6ec5b652eeb9ddeda4b5589a6f8a6) 
+
+ ngx_upstream_check 
+  Homepage:     (https://github.com/yaoweibin/nginx_upstream_check_module) 
+  Commit Date:  Sat 07 Aug 2021 08:08:57 PM WIB (epoch: 1628341737) 
+  Commit URL:   [e85752f] (https://github.com/yaoweibin/nginx_upstream_check_module/commit/e85752f0b9bd848f7917e02275da4013566f34d8) 
+
+ ngx_http_substitutions_filter 
+  Homepage:     (https://github.com/yaoweibin/ngx_http_substitutions_filter_module) 
+  Commit Date:  Tue 28 Dec 2021 08:17:32 PM WIB (epoch: 1640697452) 
+  Commit URL:   [c6f825f] (https://github.com/yaoweibin/ngx_http_substitutions_filter_module/commit/c6f825fa592acc29275c2eb4d1ab1eccab9de19e) 
+
+
+

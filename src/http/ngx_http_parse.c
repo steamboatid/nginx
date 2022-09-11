@@ -1960,24 +1960,27 @@ unsafe:
 }
 
 
-ngx_table_elt_t *
-ngx_http_parse_multi_header_lines(ngx_http_request_t *r,
-    ngx_table_elt_t *headers, ngx_str_t *name, ngx_str_t *value)
+ngx_int_t
+ngx_http_parse_multi_header_lines(ngx_array_t *headers, ngx_str_t *name,
+    ngx_str_t *value)
 {
-    u_char           *start, *last, *end, ch;
-    ngx_table_elt_t  *h;
+    ngx_uint_t         i;
+    u_char            *start, *last, *end, ch;
+    ngx_table_elt_t  **h;
 
-    for (h = headers; h; h = h->next) {
+    h = headers->elts;
 
-        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "parse header: \"%V: %V\"", &h->key, &h->value);
+    for (i = 0; i < headers->nelts; i++) {
 
-        if (name->len > h->value.len) {
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, headers->pool->log, 0,
+                       "parse header: \"%V: %V\"", &h[i]->key, &h[i]->value);
+
+        if (name->len > h[i]->value.len) {
             continue;
         }
 
-        start = h->value.data;
-        end = h->value.data + h->value.len;
+        start = h[i]->value.data;
+        end = h[i]->value.data + h[i]->value.len;
 
         while (start < end) {
 
@@ -1991,7 +1994,7 @@ ngx_http_parse_multi_header_lines(ngx_http_request_t *r,
 
             if (value == NULL) {
                 if (start == end || *start == ',') {
-                    return h;
+                    return i;
                 }
 
                 goto skip;
@@ -2011,7 +2014,7 @@ ngx_http_parse_multi_header_lines(ngx_http_request_t *r,
             value->len = last - start;
             value->data = start;
 
-            return h;
+            return i;
 
         skip:
 
@@ -2026,28 +2029,31 @@ ngx_http_parse_multi_header_lines(ngx_http_request_t *r,
         }
     }
 
-    return NULL;
+    return NGX_DECLINED;
 }
 
 
-ngx_table_elt_t *
-ngx_http_parse_set_cookie_lines(ngx_http_request_t *r,
-    ngx_table_elt_t *headers, ngx_str_t *name, ngx_str_t *value)
+ngx_int_t
+ngx_http_parse_set_cookie_lines(ngx_array_t *headers, ngx_str_t *name,
+    ngx_str_t *value)
 {
-    u_char           *start, *last, *end;
-    ngx_table_elt_t  *h;
+    ngx_uint_t         i;
+    u_char            *start, *last, *end;
+    ngx_table_elt_t  **h;
 
-    for (h = headers; h; h = h->next) {
+    h = headers->elts;
 
-        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "parse header: \"%V: %V\"", &h->key, &h->value);
+    for (i = 0; i < headers->nelts; i++) {
 
-        if (name->len >= h->value.len) {
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, headers->pool->log, 0,
+                       "parse header: \"%V: %V\"", &h[i]->key, &h[i]->value);
+
+        if (name->len >= h[i]->value.len) {
             continue;
         }
 
-        start = h->value.data;
-        end = h->value.data + h->value.len;
+        start = h[i]->value.data;
+        end = h[i]->value.data + h[i]->value.len;
 
         if (ngx_strncasecmp(start, name->data, name->len) != 0) {
             continue;
@@ -2071,10 +2077,10 @@ ngx_http_parse_set_cookie_lines(ngx_http_request_t *r,
         value->len = last - start;
         value->data = start;
 
-        return h;
+        return i;
     }
 
-    return NULL;
+    return NGX_DECLINED;
 }
 
 

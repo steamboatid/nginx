@@ -1,0 +1,29 @@
+
+LATER :
+// might conflicts with other mods
+https://github.com/dvershinin/ngx_http_js_challenge_module
+
+LESS important:
+https://github.com/dvershinin/ngx_small_light
+
+
+PCRE v1?
+
+
+https://github.com/evanmiller/mod_zip
+https://github.com/ioppermann/modjpeg-nginx
+https://github.com/Lax/traffic-accounting-nginx-module
+https://github.com/masonicboom/ipscrub
+https://github.com/max-lt/nginx-jwt-module
+https://github.com/winshining/nginx-http-flv-module
+
+
+
+https://github.com/dvershinin/ngx_slowfs_cache "http-slowfs"
+https://github.com/dvershinin/ngx_webp "http-webp"
+
+https://github.com/GetPageSpeed/ngx_immutable "http-immutable"
+https://github.com/GetPageSpeed/ngx_security_headers "http-security-headers"
+
+https://github.com/repsheet/ngx_bot_verifier "http-bot-verifier"
+https://github.com/themagister/Nginx-DOH-Module "http-doh"

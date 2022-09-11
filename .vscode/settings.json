@@ -1,0 +1,7 @@
+{
+	"C_Cpp.errorSquiggles": "Disabled",
+	"files.associations": {
+		"system_error": "c"
+	},
+	"C_Cpp.dimInactiveRegions": false
+}
