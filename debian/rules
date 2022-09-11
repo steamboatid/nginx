@@ -31,6 +31,7 @@ openssl_ver:=$(shell openssl version | cut -d' ' -f2)
 # stream-lua \
 #	http-upsync \
 #	stream-upsync \
+#	ssl-ct \
 
 #FLAVOURS := core full light extras static
 FLAVOURS := core extras
@@ -62,7 +63,6 @@ DYN_MODS := \
 	stream \
 	stream-geoip \
 	stream-geoip2 \
-	ssl-ct \
 	http-enhanced-memcached \
 	http-naxsi \
 	http-push-stream \
@@ -170,7 +170,6 @@ core_configure_flags := \
 			--with-mail=dynamic \
 			--with-mail_ssl_module \
 			--add-dynamic-module=$(MODULESDIR)/http-ndk \
-			--add-dynamic-module=$(MODULESDIR)/ssl-ct
 
 full_configure_flags := \
 			$(common_configure_flags) \
@@ -193,7 +192,6 @@ full_configure_flags := \
 			--add-dynamic-module=$(MODULESDIR)/http-upstream-check \
 			--add-dynamic-module=$(MODULESDIR)/http-upstream-fair \
 			--add-dynamic-module=$(MODULESDIR)/http-subs-filter \
-			--add-dynamic-module=$(MODULESDIR)/ssl-ct
 
 
 
@@ -257,9 +255,9 @@ extras_configure_flags := \
 			--add-module=$(MODULESDIR)/http-upstream-check \
 			--add-module=$(MODULESDIR)/http-waf \
 			--add-module=$(MODULESDIR)/http-webp \
-			--add-module=$(MODULESDIR)/ssl-ct \
 
 
+#	--add-module=$(MODULESDIR)/ssl-ct \
 # --add-dynamic-module=$(MODULESDIR)/http-lua \
 # --add-dynamic-module=$(MODULESDIR)/stream-lua \
 #	--add-dynamic-module=$(MODULESDIR)/http-upsync \
