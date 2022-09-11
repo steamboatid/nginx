@@ -21,8 +21,9 @@ openssl_ver:=$(shell openssl version | cut -d' ' -f2)
 #	http-waf \
 #	http-geoip2 \
 
-#FLAVOURS := core full light extras static
-FLAVOURS := core extras
+
+FLAVOURS := core full light extras static
+
 DYN_MODS := \
 	http-auth-ldap \
 	http-auth-pam \
