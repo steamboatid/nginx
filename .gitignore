@@ -118,4 +118,4 @@ debian/*.before
 /*/debian/*.before
 # /*/debian/nginx-*/*
 # /*/debian/libnginx-mod-*/*
-# /*/debian/build-*/*
+/*/debian/build-*/*
