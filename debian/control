@@ -32,7 +32,7 @@ Build-Depends: debhelper (>= 9) | debhelper-compat (>= 13),
                openssl,
                bison,
                flex,
-               libsodium-dev
+               libsodium-dev,
                zlib1g-dev
 Standards-Version: 4.6.1
 Homepage: https://nginx.org
