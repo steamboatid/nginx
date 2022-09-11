@@ -32,6 +32,9 @@ openssl_ver:=$(shell openssl version | cut -d' ' -f2)
 #	http-upsync \
 #	stream-upsync \
 #	ssl-ct \
+#	stream-geoip2 \
+#	http-waf \
+#	http-geoip2 \
 
 #FLAVOURS := core full light extras static
 FLAVOURS := core extras
@@ -44,7 +47,6 @@ DYN_MODS := \
 	http-redis2 \
 	http-fancyindex \
 	http-geoip \
-	http-geoip2 \
 	http-headers-more-filter \
 	http-image-filter \
 	http-ndk \
@@ -62,14 +64,12 @@ DYN_MODS := \
 	rtmp \
 	stream \
 	stream-geoip \
-	stream-geoip2 \
 	http-enhanced-memcached \
 	http-naxsi \
 	http-push-stream \
 	http-cookie-flag-filter \
 	http-accept-language \
 	http-set-misc \
-	http-waf \
 	http-testcookie-access \
 	http-sysguard \
 	http-upstream-check \
@@ -227,7 +227,6 @@ extras_configure_flags := \
 			--add-module=$(MODULESDIR)/http-dav-ext \
 			--add-module=$(MODULESDIR)/http-echo \
 			--add-module=$(MODULESDIR)/http-fancyindex \
-			--add-module=$(MODULESDIR)/http-geoip2 \
 			--add-module=$(MODULESDIR)/http-headers-more-filter \
 			--add-module=$(MODULESDIR)/http-uploadprogress \
 			--add-module=$(MODULESDIR)/http-upstream-fair \
@@ -253,10 +252,11 @@ extras_configure_flags := \
 			--add-module=$(MODULESDIR)/http-sysguard \
 			--add-module=$(MODULESDIR)/http-testcookie-access \
 			--add-module=$(MODULESDIR)/http-upstream-check \
-			--add-module=$(MODULESDIR)/http-waf \
 			--add-module=$(MODULESDIR)/http-webp \
 
 
+#	--add-module=$(MODULESDIR)=debian/modules/http-geoip2 \
+#	--add-module=$(MODULESDIR)/http-waf \
 #	--add-module=$(MODULESDIR)/ssl-ct \
 # --add-dynamic-module=$(MODULESDIR)/http-lua \
 # --add-dynamic-module=$(MODULESDIR)/stream-lua \
@@ -300,7 +300,6 @@ static_configure_flags := \
 			--add-module=$(MODULESDIR)=debian/modules/http-dav-ext \
 			--add-module=$(MODULESDIR)=debian/modules/http-echo \
 			--add-module=$(MODULESDIR)=debian/modules/http-fancyindex \
-			--add-module=$(MODULESDIR)=debian/modules/http-geoip2 \
 			--add-module=$(MODULESDIR)=debian/modules/http-headers-more-filter \
 			--add-module=$(MODULESDIR)=debian/modules/http-uploadprogress \
 			--add-module=$(MODULESDIR)=debian/modules/http-upstream-fair \
@@ -325,7 +324,6 @@ static_configure_flags := \
 			--add-module=$(MODULESDIR)=debian/modules/http-sysguard \
 			--add-module=$(MODULESDIR)=debian/modules/http-testcookie-access \
 			--add-module=$(MODULESDIR)=debian/modules/http-upstream-check \
-			--add-module=$(MODULESDIR)=debian/modules/http-waf \
 			--add-module=$(MODULESDIR)=debian/modules/http-webp \
 			--add-module=$(MODULESDIR)=debian/modules/ssl-ct \
 
@@ -334,8 +332,6 @@ static_configure_flags := \
 
 override_dh_auto_configure: config_patch_modules $(foreach flavour,$(FLAVOURS),config.arch.$(flavour))
 override_dh_auto_build:     $(foreach flavour,$(FLAVOURS),build.arch.$(flavour))
-	export LIB_UTHASH=$(MODULESDIR)/http-waf/inc/uthash/src
-	cd $(MODULESDIR)/http-waf && make
 override_dh_strip:          $(foreach flavour,$(FLAVOURS),strip.arch.$(flavour)) $(foreach mod,$(DYN_MODS),strip.mods.$(mod))
 override_dh_clean:          clean_patch_modules $(foreach flavour,$(FLAVOURS),clean.$(flavour))
 	mkdir -p $(MODULESDIR)/http-uploadprogress/test
