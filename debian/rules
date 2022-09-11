@@ -35,6 +35,8 @@ openssl_ver:=$(shell openssl version | cut -d' ' -f2)
 #	stream-geoip2 \
 #	http-waf \
 #	http-geoip2 \
+#	http-js \
+#	stream-js \
 
 
 FLAVOURS := core full light extras static
@@ -56,8 +58,6 @@ DYN_MODS := \
 	http-uploadprogress \
 	http-xslt-filter \
 	http-vhost-traffic-status \
-	http-js \
-	stream-js \
 	http-brotli-filter \
 	http-brotli-static \
 	mail \
