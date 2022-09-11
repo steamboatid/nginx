@@ -1,0 +1,161 @@
+----------------------------------------
+checking for C compiler: cc
+gcc version 10.2.1 20210110 (Debian 10.2.1-6) 
+----------------------------------------
+checking for sizeof(int)
+4
+----------------------------------------
+checking for sizeof(u_int)
+4
+----------------------------------------
+checking for sizeof(void *)
+8
+----------------------------------------
+checking for sizeof(uintptr_t)
+8
+----------------------------------------
+checking for sizeof(size_t)
+8
+----------------------------------------
+checking for sizeof(off_t)
+8
+----------------------------------------
+checking for sizeof(time_t)
+8
+----------------------------------------
+checking for system byte ordering
+little
+
+----------------------------------------
+checking for GCC unsigned __int128
+----------------------------------------
+checking for GCC __builtin_expect()
+----------------------------------------
+checking for GCC __builtin_unreachable()
+----------------------------------------
+checking for GCC __builtin_prefetch()
+----------------------------------------
+checking for GCC __builtin_clz()
+----------------------------------------
+checking for GCC __builtin_clzll()
+----------------------------------------
+checking for GCC __attribute__ visibility
+----------------------------------------
+checking for GCC __attribute__ malloc
+----------------------------------------
+checking for GCC __attribute__ aligned
+----------------------------------------
+checking for GCC __attribute__ packed
+----------------------------------------
+checking for Address sanitizer
+build/autotest.c: In function 'main':
+build/autotest.c:12:19: error: expected expression before '}' token
+   12 |                   }
+      |                   ^
+----------
+int main(void) {
+                      return
+                  #ifdef __SANITIZE_ADDRESS__
+                          0;
+                  #else
+                      #if defined(__has_feature)
+                          #if __has_feature(address_sanitizer)
+                          0;
+                          #endif
+                      #endif
+                  #endif
+                  }
+----------
+cc -lpcre2-8 -O3 -Wno-deprecated-declarations -DNDK_SET_VAR -DNDK_UPSTREAM_LIST -pipe -fPIC -fvisibility=hidden -O -W -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wmissing-prototypes -Werror -g -fexcess-precision=standard -O -o build/autotest build/autotest.c -O
+----------
+----------------------------------------
+checking for Memory sanitizer
+build/autotest.c:1:10: fatal error: sanitizer/msan_interface.h: No such file or directory
+    1 | #include <sanitizer/msan_interface.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+----------
+#include <sanitizer/msan_interface.h>
+                  int main(int argc, char *argv[]) {
+                      __msan_unpoison(argv, sizeof(char *));
+                      return 0;
+                  }
+----------
+cc -lpcre2-8 -O3 -Wno-deprecated-declarations -DNDK_SET_VAR -DNDK_UPSTREAM_LIST -pipe -fPIC -fvisibility=hidden -O -W -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wmissing-prototypes -Werror -g -fexcess-precision=standard -O -o build/autotest build/autotest.c -O
+----------
+----------------------------------------
+checking for _mm_setcsr()
+----------------------------------------
+checking for clock_gettime(CLOCK_MONOTONIC)
+----------------------------------------
+checking for struct tm.tm_gmtoff
+----------------------------------------
+checking for altzone
+build/autotest.c: In function 'main':
+build/autotest.c:4:23: error: 'altzone' undeclared (first use in this function)
+    4 |                       altzone = 0;
+      |                       ^~~~~~~
+build/autotest.c:4:23: note: each undeclared identifier is reported only once for each function it appears in
+----------
+#include <time.h>
+
+                  int main(void) {
+                      altzone = 0;
+                      return 0;
+                  }
+----------
+cc -lpcre2-8 -O3 -Wno-deprecated-declarations -DNDK_SET_VAR -DNDK_UPSTREAM_LIST -pipe -fPIC -fvisibility=hidden -O -W -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wmissing-prototypes -Werror -g -fexcess-precision=standard -O -o build/autotest build/autotest.c -O
+----------
+----------------------------------------
+checking for posix_memalign()
+----------------------------------------
+checking for getrandom()
+----------------------------------------
+checking for stat.st_atimespec
+build/autotest.c: In function 'main':
+build/autotest.c:10:37: error: 'struct stat' has no member named 'st_atimespec'
+   10 |                      return (int) st.st_atimespec.tv_sec;
+      |                                     ^
+----------
+#include <sys/stat.h>
+
+                 int main(void) {
+                     struct stat st;
+
+                     if (fstat(0, &st) != 0) {
+                        return 1;
+                     }
+
+                     return (int) st.st_atimespec.tv_sec;
+                 }
+----------
+cc -lpcre2-8 -O3 -Wno-deprecated-declarations -DNDK_SET_VAR -DNDK_UPSTREAM_LIST -pipe -fPIC -fvisibility=hidden -O -W -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wmissing-prototypes -Werror -g -fexcess-precision=standard -O -o build/autotest build/autotest.c -O
+----------
+----------------------------------------
+checking for stat.st_birthtim
+build/autotest.c: In function 'main':
+build/autotest.c:10:38: error: 'struct stat' has no member named 'st_birthtim'
+   10 |                       return (int) st.st_birthtim.tv_sec;
+      |                                      ^
+----------
+#include <sys/stat.h>
+
+                  int main(void) {
+                      struct stat st;
+
+                      if (fstat(0, &st) != 0) {
+                         return 1;
+                      }
+
+                      return (int) st.st_birthtim.tv_sec;
+                  }
+----------
+cc -lpcre2-8 -O3 -Wno-deprecated-declarations -DNDK_SET_VAR -DNDK_UPSTREAM_LIST -pipe -fPIC -fvisibility=hidden -O -W -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wmissing-prototypes -Werror -g -fexcess-precision=standard -O -o build/autotest build/autotest.c -O
+----------
+----------------------------------------
+checking for stat.st_atim
+----------------------------------------
+checking for explicit_bzero()
+----------------------------------------
+checking for GNU readline library
+/bin/sh: 1: expect: not found

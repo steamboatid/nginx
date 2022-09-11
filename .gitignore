@@ -1,3 +1,7 @@
+!releng
+!debian/modules/http-waf/inc/libinjection/misc/*
+!.clang-format
+
 # pyc
 *.pyc
 
@@ -42,7 +46,7 @@
 /libtool
 
 # The .clang-format.example file may be copied here for use with -style=file
-.clang-format
+#.clang-format
 
 test_all
 *.trs
