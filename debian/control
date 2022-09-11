@@ -119,7 +119,6 @@ Depends: libnginx-mod-http-geoip (= ${binary:Version}),
          libnginx-mod-mail (= ${binary:Version}),
          libnginx-mod-stream (= ${binary:Version}),
          libnginx-mod-stream-geoip (= ${binary:Version}),
-         libnginx-mod-ssl-ct (= ${binary:Version}),
          nginx-common (= ${source:Version}),
          iproute2,
          ${misc:Depends},
@@ -154,7 +153,6 @@ Architecture: any
 Depends: libnginx-mod-http-auth-pam (= ${binary:Version}),
          libnginx-mod-http-dav-ext (= ${binary:Version}),
          libnginx-mod-http-echo (= ${binary:Version}),
-         libnginx-mod-http-geoip2 (= ${binary:Version}),
          libnginx-mod-http-image-filter (= ${binary:Version}),
          libnginx-mod-http-subs-filter (= ${binary:Version}),
          libnginx-mod-http-upstream-check (= ${binary:Version}),
@@ -162,8 +160,6 @@ Depends: libnginx-mod-http-auth-pam (= ${binary:Version}),
          libnginx-mod-http-xslt-filter (= ${binary:Version}),
          libnginx-mod-mail (= ${binary:Version}),
          libnginx-mod-stream (= ${binary:Version}),
-         libnginx-mod-stream-geoip2 (= ${binary:Version}),
-         libnginx-mod-ssl-ct (= ${binary:Version}),
          nginx-common (= ${source:Version}),
          nginx-core (>= ${source:Version}),
          nginx-core (<< ${source:Version}.1~),
@@ -238,7 +234,6 @@ Depends: libnginx-mod-http-accept-language (= ${binary:Version}),
          libnginx-mod-http-enhanced-memcached (= ${binary:Version}),
          libnginx-mod-http-fancyindex (= ${binary:Version}),
          libnginx-mod-http-geoip (= ${binary:Version}),
-         libnginx-mod-http-geoip2 (= ${binary:Version}),
          libnginx-mod-http-headers-more-filter (= ${binary:Version}),
          libnginx-mod-http-image-filter (= ${binary:Version}),
          libnginx-mod-http-naxsi (= ${binary:Version}),
@@ -255,7 +250,6 @@ Depends: libnginx-mod-http-accept-language (= ${binary:Version}),
          libnginx-mod-http-upstream-fair (= ${binary:Version}),
          libnginx-mod-http-sticky (= ${binary:Version}),
          libnginx-mod-http-vhost-traffic-status (= ${binary:Version}),
-         libnginx-mod-http-waf (= ${binary:Version}),
          libnginx-mod-http-xslt-filter (= ${binary:Version}),
          libnginx-mod-http-memc (= ${binary:Version}),
          libnginx-mod-http-srcache-filter (= ${binary:Version}),
@@ -268,10 +262,8 @@ Depends: libnginx-mod-http-accept-language (= ${binary:Version}),
          libnginx-mod-mail (= ${binary:Version}),
          libnginx-mod-nchan (= ${binary:Version}),
          libnginx-mod-rtmp (= ${binary:Version}),
-         libnginx-mod-ssl-ct (= ${binary:Version}),
          libnginx-mod-stream (= ${binary:Version}),
          libnginx-mod-stream-geoip (= ${binary:Version}),
-         libnginx-mod-stream-geoip2 (= ${binary:Version}),
          libnginx-mod-http-google-filter (= ${binary:Version}),
          nginx-common (= ${source:Version}),
          iproute2,
@@ -308,10 +300,7 @@ Description: nginx web/proxy server (extended version)
 
 Package: nginx-static
 Architecture: any
-Depends: libnginx-mod-nchan (= ${binary:Version}),
-         libnginx-mod-http-waf (= ${binary:Version}),
-         libnginx-mod-http-naxsi (= ${binary:Version}),
-         nginx-common (= ${source:Version}),
+Depends: nginx-common (= ${source:Version}),
          ${misc:Depends},
          ${shlibs:Depends},
 Provides: httpd, httpd-cgi, nginx
@@ -334,18 +323,6 @@ Recommends: nginx,
 Description: GeoIP HTTP module for Nginx
  The ngx_http_geoip module creates variables with values depending on the
  client IP address, using the precompiled MaxMind databases.
- .
- Those variables include country, region, city, latitude, longitude, postal
- code, etc.
-
-Package: libnginx-mod-http-geoip2
-Architecture: any
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Recommends: nginx,
-Description: GeoIP2 HTTP module for Nginx
- The ngx_http_geoip2 module creates variables with values depending on the
- client IP address, using the precompiled MaxMind GeoIP2 databases.
  .
  Those variables include country, region, city, latitude, longitude, postal
  code, etc.
@@ -406,19 +383,6 @@ Recommends: nginx,
 Description: GeoIP Stream module for Nginx
  The ngx_stream_geoip module creates variables with values depending on the
  client IP address, using the precompiled MaxMind databases.
- .
- Those variables include country, region, city, latitude, longitude, postal
- code, etc.
-
-Package: libnginx-mod-stream-geoip2
-Architecture: any
-Depends: libnginx-mod-stream (= ${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends},
-Recommends: nginx,
-Description: GeoIP2 Stream module for Nginx
- The ngx_stream_geoip2 module creates variables with values depending on the
- client IP address, using the precompiled MaxMind GeoIP2 databases.
  .
  Those variables include country, region, city, latitude, longitude, postal
  code, etc.
@@ -682,19 +646,6 @@ Description: RTMP support for Nginx
   - Integrated stream recording;
   - and more.
 
-Package: libnginx-mod-ssl-ct
-Architecture: any
-Depends: libnginx-mod-http-subs-filter (= ${binary:Version}),
-         libnginx-mod-http-ndk (= ${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends},
-Description: Certificate Transparency support for Nginx
- This nginx Certificate Transparency adds support for the TLS
- signed_certificate_timestamp extension to nginx, which is one of the
- mechanisms supported by Google's Certificate Transparency project to
- deliver Signed Certificate Timestamps to TLS clients.
- For more details please visit https://github.com/grahamedgecombe/nginx-ct
-
 Package: libnginx-mod-http-enhanced-memcached
 Architecture: any
 Depends: libnginx-mod-http-subs-filter (= ${binary:Version}),
@@ -750,16 +701,6 @@ Depends: libnginx-mod-http-subs-filter (= ${binary:Version}),
 Description: set-misc module for nginx.
  Useful module to play with variables in nginx.
  For more details please visit https://github.com/openresty/set-misc-nginx-module
-
-Package: libnginx-mod-http-waf
-Architecture: any
-Depends: libnginx-mod-http-subs-filter (= ${binary:Version}),
-         libnginx-mod-http-ndk (= ${binary:Version}),
-         libsodium23, bison, flex,
-         ${misc:Depends},
-         ${shlibs:Depends},
-Description: Yet another WAF module for nginx.
- For more details please visit https://github.com/ADD-SP/ngx_waf
 
 Package: libnginx-mod-http-testcookie-access
 Architecture: any
