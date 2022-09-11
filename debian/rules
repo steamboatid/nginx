@@ -388,8 +388,6 @@ config.arch.%:
 	cp -Pa $(CURDIR)/src $(BUILDDIR_$*)/
 	cp -Pa $(CURDIR)/man $(BUILDDIR_$*)/
 	cd $(BUILDDIR_$*) && ./configure $($*_configure_flags)
-	have="NDK_SET_VAR"; \
-	/bin/echo -e "#ifndef $$have\n#define $$have  1\n#endif" >> $(BUILDDIR_$*)/objs/ngx_auto_config.h; \
 
 config.src:
 	dh_testdir
