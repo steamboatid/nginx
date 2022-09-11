@@ -326,13 +326,13 @@ override_dh_clean:          clean_patch_modules $(foreach flavour,$(FLAVOURS),cl
 
 override_dh_install:
 	dh_install
-	DH_AUTOSCRIPTDIR=$(CURDIR)/debian/autoscripts debian/debhelper/dh_nginx --in-nginx-tree
+	DH_AUTOSCRIPTDIR=$(CURDIR)/debian/autoscripts debian/dh_nginx
 
 override_dh_installinit:
-	dh_installinit --no-stop-on-upgrade --no-start --name=nginx
+	dh_installinit --no-restart-on-upgrade --no-start --name=nginx
 
-override_dh_installsystemd:
-	dh_installsystemd --name=nginx
+override_dh_systemd_enable:
+	dh_systemd_enable --name=nginx
 
 override_dh_installlogrotate:
 	dh_installlogrotate --package nginx-common --name=nginx
