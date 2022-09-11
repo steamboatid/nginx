@@ -8,7 +8,7 @@
 # optimizations
 
 # maximize speed
-CFLAGS="$CFLAGS -O2"
+CFLAGS="$CFLAGS -O3"
 
 case $CPU in
     pentium)

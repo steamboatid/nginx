@@ -25,7 +25,7 @@ ngx_msvc_ver=`echo $NGX_MSVC_VER | sed -e 's/^\([0-9]*\).*/\1/'`
 # optimizations
 
 # maximize speed, equivalent to -Og -Oi -Ot -Oy -Ob2 -Gs -GF -Gy
-CFLAGS="$CFLAGS -O2"
+CFLAGS="$CFLAGS -O3"
 
 # enable global optimization
 #CFLAGS="$CFLAGS -Og"

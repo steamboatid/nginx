@@ -1,3 +1,36 @@
 
+IMPORTANT notes :
+ - tools/1st-DK-readme.txt -- READ IT FIRST !!!
+
+Other notes :
+ - tools/clean.sh -- clean all build binary files
+ - tools/zbuild.sh -- trial build
+ - tools/update-modules.sh -- update all nginx modules
+ - tools/mods-urls.txt -- all nginx modules urls
+ - tools/refresh-readme-mods.sh -- update nginx modules readme (https://github.com/steamboatid/nginx/blob/master/debian/modules/README.Modules-versions)
+
+
+Related repos :
+---------------
+ - https://github.com/steamboatid/keydb
+ - https://github.com/steamboatid/phpredis
+ - https://github.com/steamboatid/nginx
+ - https://github.com/steamboatid/lua-resty-core
+ - https://github.com/steamboatid/lua-resty-lrucache
+ - https://github.com/steamboatid/ext-http
+ - https://github.com/steamboatid/nginx_accept_language_module
+ - https://github.com/steamboatid/apt-mirror
+ - https://github.com/steamboatid/db4
+ - https://github.com/steamboatid/sshfs
+ - https://github.com/steamboatid/libfuse
+ - https://github.com/steamboatid/libzip
+ - https://github.com/steamboatid/nutcracker
+ - https://github.com/steamboatid/dkbuild
+
+
 Documentation is available at http://nginx.org
 
+This repo is custom repo forked from https://github.com/nginx/nginx.
+Created for custom debian packaging
+
+Complete list of added modules, can be found at https://github.com/steamboatid/nginx/blob/master/debian/modules/README.Modules-versions

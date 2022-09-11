@@ -48,7 +48,7 @@ esac
 
 # optimizations
 
-#NGX_GCC_OPT="-O2"
+#NGX_GCC_OPT="-O3"
 #NGX_GCC_OPT="-Os"
 NGX_GCC_OPT="-O"
 
@@ -123,13 +123,13 @@ esac
 CFLAGS="$CFLAGS $PIPE $CPU_OPT"
 
 if [ ".$PCRE_OPT" = "." ]; then
-    PCRE_OPT="-O2 -fomit-frame-pointer $PIPE $CPU_OPT"
+    PCRE_OPT="-O3 -fomit-frame-pointer $PIPE $CPU_OPT"
 else
     PCRE_OPT="$PCRE_OPT $PIPE"
 fi
 
 if [ ".$ZLIB_OPT" = "." ]; then
-    ZLIB_OPT="-O2 -fomit-frame-pointer $PIPE $CPU_OPT"
+    ZLIB_OPT="-O3 -fomit-frame-pointer $PIPE $CPU_OPT"
 else
     ZLIB_OPT="$ZLIB_OPT $PIPE"
 fi
