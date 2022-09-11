@@ -57,58 +57,57 @@ export CFLAGS="$CFLAGS $LDLUA -O3"
 --with-http_perl_module \
 --with-http_random_index_module \
 --with-http_secure_link_module \
---add-module=debian/modules/http-ndk \
+--add-dynamic-module=debian/modules/http-ndk \
 \
---add-module=debian/modules/http-auth-pam \
---add-module=debian/modules/http-cache-purge \
---add-module=debian/modules/http-dav-ext \
---add-module=debian/modules/http-echo \
---add-module=debian/modules/http-fancyindex \
---add-module=debian/modules/http-geoip2 \
---add-module=debian/modules/http-headers-more-filter \
---add-module=debian/modules/http-uploadprogress \
---add-module=debian/modules/http-upstream-fair \
---add-module=debian/modules/nchan \
---add-module=debian/modules/rtmp \
-\
---add-module=debian/modules/http-accept-language \
---add-module=debian/modules/http-auth-ldap \
---add-module=debian/modules/http-bot-verifier \
---add-module=debian/modules/http-brotli \
---add-module=debian/modules/http-cookie-flag-filter \
---add-module=debian/modules/http-doh \
---add-module=debian/modules/http-enhanced-memcached \
---add-module=debian/modules/http-geoip2 \
---add-module=debian/modules/http-immutable \
---add-module=debian/modules/http-memc \
---add-module=debian/modules/http-push-stream \
---add-module=debian/modules/http-redis2 \
---add-module=debian/modules/http-security-headers \
---add-module=debian/modules/http-set-misc \
---add-module=debian/modules/http-slowfs \
---add-module=debian/modules/http-srcache-filter \
---add-module=debian/modules/http-sysguard \
---add-module=debian/modules/http-testcookie-access \
---add-module=debian/modules/http-upstream-check \
---add-module=debian/modules/http-waf \
---add-module=debian/modules/http-webp \
---add-module=debian/modules/ssl-ct \
-\
---add-module=debian/modules/http-sticky \
---add-module=debian/modules/http-subs-filter \
---add-module=debian/modules/http-google-filter \
---add-module=debian/modules/http-vhost-traffic-status \
+--add-dynamic-module=debian/modules/http-sticky \
+--add-dynamic-module=debian/modules/http-subs-filter \
+--add-dynamic-module=debian/modules/http-google-filter \
+--add-dynamic-module=debian/modules/http-vhost-traffic-status \
 --add-dynamic-module=debian/modules/naxsi/naxsi_src \
+\
+--add-dynamic-module=debian/modules/http-auth-pam \
+--add-dynamic-module=debian/modules/http-cache-purge \
+--add-dynamic-module=debian/modules/http-dav-ext \
+--add-dynamic-module=debian/modules/http-echo \
+--add-dynamic-module=debian/modules/http-fancyindex \
+--add-dynamic-module=debian/modules/http-geoip2 \
+--add-dynamic-module=debian/modules/http-headers-more-filter \
+--add-dynamic-module=debian/modules/http-uploadprogress \
+--add-dynamic-module=debian/modules/http-upstream-fair \
+--add-dynamic-module=debian/modules/nchan \
+--add-dynamic-module=debian/modules/rtmp \
+\
+--add-dynamic-module=debian/modules/http-accept-language \
+--add-dynamic-module=debian/modules/http-auth-ldap \
+--add-dynamic-module=debian/modules/http-bot-verifier \
+--add-dynamic-module=debian/modules/http-brotli \
+--add-dynamic-module=debian/modules/http-cookie-flag-filter \
+--add-dynamic-module=debian/modules/http-doh \
+--add-dynamic-module=debian/modules/http-enhanced-memcached \
+--add-dynamic-module=debian/modules/http-immutable \
+--add-dynamic-module=debian/modules/http-memc \
+--add-dynamic-module=debian/modules/http-push-stream \
+--add-dynamic-module=debian/modules/http-redis2 \
+--add-dynamic-module=debian/modules/http-security-headers \
+--add-dynamic-module=debian/modules/http-set-misc \
+--add-dynamic-module=debian/modules/http-slowfs \
+--add-dynamic-module=debian/modules/http-srcache-filter \
+--add-dynamic-module=debian/modules/http-sysguard \
+--add-dynamic-module=debian/modules/http-testcookie-access \
+--add-dynamic-module=debian/modules/http-upstream-check \
+--add-dynamic-module=debian/modules/http-waf \
+--add-dynamic-module=debian/modules/http-webp \
+--add-dynamic-module=debian/modules/ssl-ct \
 
 
 
-#--add-module=debian/modules/http-upsync \
-#--add-module=debian/modules/stream-upsync \
-#--add-module=debian/modules/njs/nginx \
+#--add-dynamic-module=debian/modules/http-upsync \
+#--add-dynamic-module=debian/modules/stream-upsync \
+#--add-dynamic-module=debian/modules/njs/nginx \
 
 # lua only compatible w/ PCRE v1
-# --add-module=debian/_baks/baks/modules/http-lua \
-# --add-module=debian/modules/stream-lua \
+# --add-dynamic-module=debian/_baks/baks/modules/http-lua \
+# --add-dynamic-module=debian/modules/stream-lua \
 
 
 

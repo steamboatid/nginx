@@ -1,4 +1,19 @@
 #!/usr/bin/make -f
+# -*- makefile -*-
+
+#----------------- dkverbosev2
+DH_VERBOSE=1
+export DH_VERBOSE
+export DH_OPTIONS
+export DEB_BUILD_OPTIONS
+export DEB_BUILD_PROFILES
+export DPKG_EXPORT_BUILDFLAGS
+export SHELL
+export DEB_CFLAGS_MAINT_APPEND
+export DEB_LDFLAGS_MAINT_APPEND
+#----------------- end
+
+#!/usr/bin/make -f
 #export DH_VERBOSE=1
 
 export LUAJIT_INC=/usr/include/luajit-2.1
@@ -17,7 +32,8 @@ openssl_ver:=$(shell openssl version | cut -d' ' -f2)
 #	http-upsync \
 #	stream-upsync \
 
-FLAVOURS := core full light extras static
+#FLAVOURS := core full light extras static
+FLAVOURS := core extras
 DYN_MODS := \
 	http-auth-ldap \
 	http-auth-pam \
@@ -72,7 +88,7 @@ DYN_MODS := \
 
 MODULESDIR = $(CURDIR)/debian/modules
 BASEDIR = $(CURDIR)
-$(foreach flavour,$(FLAVOURS) src ndksrc,$(eval BUILDDIR_$(flavour) = $(CURDIR)/debian/build-$(flavour)))
+$(foreach flavour,$(FLAVOURS),$(eval BUILDDIR_$(flavour) = $(CURDIR)/debian/build-$(flavour)))
 
 DEB_BUILD_ARCH ?=$(shell dpkg-architecture -qDEB_BUILD_ARCH)
 ifeq ($(DEB_BUILD_ARCH),sparc)
@@ -153,6 +169,7 @@ core_configure_flags := \
 			--with-stream_ssl_module \
 			--with-mail=dynamic \
 			--with-mail_ssl_module \
+			--add-dynamic-module=$(MODULESDIR)/http-ndk \
 			--add-dynamic-module=$(MODULESDIR)/ssl-ct
 
 full_configure_flags := \
@@ -169,6 +186,7 @@ full_configure_flags := \
 			--with-stream_ssl_preread_module \
 			--with-mail=dynamic \
 			--with-mail_ssl_module \
+			--add-dynamic-module=$(MODULESDIR)/http-ndk \
 			--add-dynamic-module=$(MODULESDIR)/http-auth-pam \
 			--add-dynamic-module=$(MODULESDIR)/http-dav-ext \
 			--add-dynamic-module=$(MODULESDIR)/http-echo \
@@ -199,44 +217,48 @@ extras_configure_flags := \
 			--with-stream_geoip_module=dynamic \
 			--with-stream_ssl_module \
 			--with-stream_ssl_preread_module \
-			--add-dynamic-module=$(MODULESDIR)/http-ndk \
-			--add-dynamic-module=$(MODULESDIR)/http-accept-language \
-			--add-dynamic-module=$(MODULESDIR)/http-auth-ldap \
-			--add-dynamic-module=$(MODULESDIR)/http-auth-pam \
-			--add-dynamic-module=$(MODULESDIR)/http-brotli \
-			--add-dynamic-module=$(MODULESDIR)/http-cache-purge \
-			--add-dynamic-module=$(MODULESDIR)/http-dav-ext \
-			--add-dynamic-module=$(MODULESDIR)/http-echo \
-			--add-dynamic-module=$(MODULESDIR)/http-fancyindex \
-			--add-dynamic-module=$(MODULESDIR)/http-headers-more-filter \
-			--add-dynamic-module=$(MODULESDIR)/http-redis2 \
-			--add-dynamic-module=$(MODULESDIR)/http-set-misc \
-			--add-dynamic-module=$(MODULESDIR)/http-subs-filter \
-			--add-dynamic-module=$(MODULESDIR)/http-uploadprogress \
-			--add-dynamic-module=$(MODULESDIR)/http-vhost-traffic-status \
-			--add-dynamic-module=$(MODULESDIR)/nchan \
-			--add-dynamic-module=$(MODULESDIR)/rtmp \
-			--add-dynamic-module=$(MODULESDIR)/http-cookie-flag-filter \
-			--add-dynamic-module=$(MODULESDIR)/http-enhanced-memcached \
-			--add-dynamic-module=$(MODULESDIR)/http-push-stream \
-			--add-dynamic-module=$(MODULESDIR)/http-sysguard \
-			--add-dynamic-module=$(MODULESDIR)/http-testcookie-access \
-			--add-dynamic-module=$(MODULESDIR)/http-geoip2 \
-			--add-dynamic-module=$(MODULESDIR)/ssl-ct \
-			--add-dynamic-module=$(MODULESDIR)/http-upstream-check \
-			--add-dynamic-module=$(MODULESDIR)/http-upstream-fair \
-			--add-dynamic-module=$(MODULESDIR)/http-sticky \
-			--add-dynamic-module=$(MODULESDIR)/http-waf \
-			--add-dynamic-module=$(MODULESDIR)/naxsi/naxsi_src \
-			--add-dynamic-module=$(MODULESDIR)/http-memc \
-			--add-dynamic-module=$(MODULESDIR)/http-srcache-filter \
-			--add-dynamic-module=$(MODULESDIR)/http-slowfs \
-			--add-dynamic-module=$(MODULESDIR)/http-webp \
-			--add-dynamic-module=$(MODULESDIR)/http-immutable \
-			--add-dynamic-module=$(MODULESDIR)/http-security-headers \
-			--add-dynamic-module=$(MODULESDIR)/http-bot-verifier \
-			--add-dynamic-module=$(MODULESDIR)/http-doh \
-			--add-dynamic-module=$(MODULESDIR)/http-google-filter
+			--add-module=$(MODULESDIR)/http-ndk \
+			--add-module=$(MODULESDIR)/http-sticky \
+			--add-module=$(MODULESDIR)/http-subs-filter \
+			--add-module=$(MODULESDIR)/http-google-filter \
+			--add-module=$(MODULESDIR)/http-vhost-traffic-status \
+			--add-module=$(MODULESDIR)/naxsi/naxsi_src \
+			\
+			--add-module=$(MODULESDIR)/http-auth-pam \
+			--add-module=$(MODULESDIR)/http-cache-purge \
+			--add-module=$(MODULESDIR)/http-dav-ext \
+			--add-module=$(MODULESDIR)/http-echo \
+			--add-module=$(MODULESDIR)/http-fancyindex \
+			--add-module=$(MODULESDIR)/http-geoip2 \
+			--add-module=$(MODULESDIR)/http-headers-more-filter \
+			--add-module=$(MODULESDIR)/http-uploadprogress \
+			--add-module=$(MODULESDIR)/http-upstream-fair \
+			--add-module=$(MODULESDIR)/nchan \
+			--add-module=$(MODULESDIR)/rtmp \
+			\
+			--add-module=$(MODULESDIR)/http-accept-language \
+			--add-module=$(MODULESDIR)/http-auth-ldap \
+			--add-module=$(MODULESDIR)/http-bot-verifier \
+			--add-module=$(MODULESDIR)/http-brotli \
+			--add-module=$(MODULESDIR)/http-cookie-flag-filter \
+			--add-module=$(MODULESDIR)/http-doh \
+			--add-module=$(MODULESDIR)/http-enhanced-memcached \
+			--add-module=$(MODULESDIR)/http-immutable \
+			--add-module=$(MODULESDIR)/http-memc \
+			--add-module=$(MODULESDIR)/http-push-stream \
+			\
+			--add-module=$(MODULESDIR)/http-redis2 \
+			--add-module=$(MODULESDIR)/http-security-headers \
+			--add-module=$(MODULESDIR)/http-set-misc \
+			--add-module=$(MODULESDIR)/http-slowfs \
+			--add-module=$(MODULESDIR)/http-srcache-filter \
+			--add-module=$(MODULESDIR)/http-sysguard \
+			--add-module=$(MODULESDIR)/http-testcookie-access \
+			--add-module=$(MODULESDIR)/http-upstream-check \
+			--add-module=$(MODULESDIR)/http-waf \
+			--add-module=$(MODULESDIR)/http-webp \
+			--add-module=$(MODULESDIR)/ssl-ct \
+
 
 # --add-dynamic-module=$(MODULESDIR)/http-lua \
 # --add-dynamic-module=$(MODULESDIR)/stream-lua \
@@ -267,67 +289,70 @@ static_configure_flags := \
 			--with-stream_geoip_module \
 			--with-stream_ssl_module \
 			--with-stream_ssl_preread_module \
-			--add-module=$(MODULESDIR)/http-ndk \
-			--add-module=$(MODULESDIR)/http-accept-language \
-			--add-module=$(MODULESDIR)/http-auth-ldap \
-			--add-module=$(MODULESDIR)/http-auth-pam \
-			--add-module=$(MODULESDIR)/http-brotli \
-			--add-module=$(MODULESDIR)/http-cache-purge \
-			--add-module=$(MODULESDIR)/http-dav-ext \
-			--add-module=$(MODULESDIR)/http-echo \
-			--add-module=$(MODULESDIR)/http-fancyindex \
-			--add-module=$(MODULESDIR)/http-headers-more-filter \
-			--add-module=$(MODULESDIR)/http-redis2 \
-			--add-module=$(MODULESDIR)/http-set-misc \
-			--add-module=$(MODULESDIR)/http-subs-filter \
-			--add-module=$(MODULESDIR)/http-uploadprogress \
-			--add-module=$(MODULESDIR)/http-vhost-traffic-status \
-			--add-module=$(MODULESDIR)/rtmp \
-			--add-module=$(MODULESDIR)/http-cookie-flag-filter \
-			--add-module=$(MODULESDIR)/http-enhanced-memcached \
-			--add-module=$(MODULESDIR)/http-push-stream \
-			--add-module=$(MODULESDIR)/http-sysguard \
-			--add-module=$(MODULESDIR)/http-testcookie-access \
-			--add-module=$(MODULESDIR)/http-geoip2 \
-			--add-module=$(MODULESDIR)/ssl-ct \
-			--add-module=$(MODULESDIR)/http-upstream-check \
-			--add-module=$(MODULESDIR)/http-upstream-fair \
-			--add-module=$(MODULESDIR)/http-sticky \
-			--add-module=$(MODULESDIR)/http-memc \
-			--add-module=$(MODULESDIR)/http-srcache-filter \
-			--add-module=$(MODULESDIR)/http-slowfs \
-			--add-module=$(MODULESDIR)/http-webp \
-			--add-module=$(MODULESDIR)/http-immutable \
-			--add-module=$(MODULESDIR)/http-security-headers \
-			--add-module=$(MODULESDIR)/http-bot-verifier \
-			--add-module=$(MODULESDIR)/http-doh \
-			--add-module=$(MODULESDIR)/http-google-filter \
-			--add-dynamic-module=$(MODULESDIR)/nchan \
-			--add-dynamic-module=$(MODULESDIR)/http-waf \
-			--add-dynamic-module=$(MODULESDIR)/naxsi/naxsi_src
+			--add-module=$(MODULESDIR)=debian/modules/http-ndk \
+			\
+			--add-module=$(MODULESDIR)=debian/modules/http-sticky \
+			--add-module=$(MODULESDIR)=debian/modules/http-subs-filter \
+			--add-module=$(MODULESDIR)=debian/modules/http-google-filter \
+			--add-module=$(MODULESDIR)=debian/modules/http-vhost-traffic-status \
+			--add-module=$(MODULESDIR)=debian/modules/naxsi/naxsi_src \
+			\
+			--add-module=$(MODULESDIR)=debian/modules/http-auth-pam \
+			--add-module=$(MODULESDIR)=debian/modules/http-cache-purge \
+			--add-module=$(MODULESDIR)=debian/modules/http-dav-ext \
+			--add-module=$(MODULESDIR)=debian/modules/http-echo \
+			--add-module=$(MODULESDIR)=debian/modules/http-fancyindex \
+			--add-module=$(MODULESDIR)=debian/modules/http-geoip2 \
+			--add-module=$(MODULESDIR)=debian/modules/http-headers-more-filter \
+			--add-module=$(MODULESDIR)=debian/modules/http-uploadprogress \
+			--add-module=$(MODULESDIR)=debian/modules/http-upstream-fair \
+			--add-module=$(MODULESDIR)=debian/modules/nchan \
+			--add-module=$(MODULESDIR)=debian/modules/rtmp \
+			\
+			--add-module=$(MODULESDIR)=debian/modules/http-accept-language \
+			--add-module=$(MODULESDIR)=debian/modules/http-auth-ldap \
+			--add-module=$(MODULESDIR)=debian/modules/http-bot-verifier \
+			--add-module=$(MODULESDIR)=debian/modules/http-brotli \
+			--add-module=$(MODULESDIR)=debian/modules/http-cookie-flag-filter \
+			--add-module=$(MODULESDIR)=debian/modules/http-doh \
+			--add-module=$(MODULESDIR)=debian/modules/http-enhanced-memcached \
+			--add-module=$(MODULESDIR)=debian/modules/http-immutable \
+			--add-module=$(MODULESDIR)=debian/modules/http-memc \
+			--add-module=$(MODULESDIR)=debian/modules/http-push-stream \
+			--add-module=$(MODULESDIR)=debian/modules/http-redis2 \
+			--add-module=$(MODULESDIR)=debian/modules/http-security-headers \
+			--add-module=$(MODULESDIR)=debian/modules/http-set-misc \
+			--add-module=$(MODULESDIR)=debian/modules/http-slowfs \
+			--add-module=$(MODULESDIR)=debian/modules/http-srcache-filter \
+			--add-module=$(MODULESDIR)=debian/modules/http-sysguard \
+			--add-module=$(MODULESDIR)=debian/modules/http-testcookie-access \
+			--add-module=$(MODULESDIR)=debian/modules/http-upstream-check \
+			--add-module=$(MODULESDIR)=debian/modules/http-waf \
+			--add-module=$(MODULESDIR)=debian/modules/http-webp \
+			--add-module=$(MODULESDIR)=debian/modules/ssl-ct \
 
 %:
 	dh $@ --without autoreconf
 
-override_dh_auto_configure: config_patch_modules $(foreach flavour,$(FLAVOURS),config.arch.$(flavour)) config.src config.ndksrc
-override_dh_auto_build:     $(foreach flavour,$(FLAVOURS),build.arch.$(flavour)) build.src build.ndksrc
+override_dh_auto_configure: config_patch_modules $(foreach flavour,$(FLAVOURS),config.arch.$(flavour))
+override_dh_auto_build:     $(foreach flavour,$(FLAVOURS),build.arch.$(flavour))
 	export LIB_UTHASH=$(MODULESDIR)/http-waf/inc/uthash/src
 	cd $(MODULESDIR)/http-waf && make
 override_dh_strip:          $(foreach flavour,$(FLAVOURS),strip.arch.$(flavour)) $(foreach mod,$(DYN_MODS),strip.mods.$(mod))
-override_dh_clean:          clean_patch_modules $(foreach flavour,$(FLAVOURS),clean.$(flavour)) clean.src clean.ndksrc
+override_dh_clean:          clean_patch_modules $(foreach flavour,$(FLAVOURS),clean.$(flavour))
 	mkdir -p $(MODULESDIR)/http-uploadprogress/test
 	find $(MODULESDIR)/http-uploadprogress/test -name test -type f -delete
 	dh_clean
 
 override_dh_install:
 	dh_install
-	DH_AUTOSCRIPTDIR=$(CURDIR)/debian/autoscripts debian/debhelper/dh_nginx --in-nginx-tree
+	DH_AUTOSCRIPTDIR=$(CURDIR)/debian/autoscripts debian/dh_nginx
 
 override_dh_installinit:
-	dh_installinit --no-stop-on-upgrade --no-start --name=nginx
+	dh_installinit --no-restart-on-upgrade --no-start --name=nginx
 
-override_dh_installsystemd:
-	dh_installsystemd --name=nginx
+override_dh_systemd_enable:
+	dh_systemd_enable --name=nginx
 
 override_dh_installlogrotate:
 	dh_installlogrotate --package nginx-common --name=nginx
@@ -338,24 +363,6 @@ override_dh_compress:
 build.arch.%:
 	$(MAKE) -C $(BUILDDIR_$*) build
 
-build.src:
-	cp -Pa $(CURDIR)/auto $(BUILDDIR_src)/
-	sed -i '/^# create Makefile/,/^END$$/d' $(BUILDDIR_src)/auto/make $(BUILDDIR_src)/auto/init $(BUILDDIR_src)/auto/install
-	find $(CURDIR)/src -type f -name '*.h' -printf 'src/%P\0' | tar -C $(CURDIR) --null --files-from - -c | tar -C $(BUILDDIR_src)/ -x
-	if [ -e $(CURDIR)/configure ]; then cp $(CURDIR)/configure $(BUILDDIR_src)/; fi
-	echo "NGX_CONF_FLAGS=(" $(basic_configure_flags) ")" > $(BUILDDIR_src)/conf_flags
-	pod2man debian/debhelper/dh_nginx > $(BUILDDIR_src)/dh_nginx.1
-
-build.ndksrc:
-	cp -Pa $(CURDIR)/debian/modules/http-ndk/auto \
-	       $(CURDIR)/debian/modules/http-ndk/config \
-		   $(CURDIR)/debian/modules/http-ndk/ngx_auto_lib_core $(BUILDDIR_ndksrc)/
-	for i in src objs; do \
-	  find $(CURDIR)/debian/modules/http-ndk/$$i -type f -name '*.h' -printf "$$i/%P\0" | \
-	    tar -C $(CURDIR)/debian/modules/http-ndk --null --files-from - -c | tar -C $(BUILDDIR_ndksrc)/ -x; \
-	done
-	chmod +x $(CURDIR)/debian/build-ndksrc/auto/build
-
 strip.arch.%:
 	dh_strip --package=nginx-$(*) -O--dbgsym-migration='nginx-$(*)-dbg (<< 1.10.1-3~)'
 
@@ -364,7 +371,7 @@ strip.mods.%:
 
 config_patch_modules: $(foreach mod,$(modules_with_patches),config.patch.$(mod))
 config.patch.%:
-	cd $(MODULESDIR)/$* && QUILT_PATCHES=$(MODULESPATCHDIR)/$* quilt push -a
+	cd $(MODULESDIR)/$* && QUILT_PATCHES=$(MODULESPATCHDIR)/$* quilt push -a -f || true
 
 clean_patch_modules: $(foreach mod,$(modules_with_patches),clean.patch.$(mod))
 clean.patch.%:
@@ -383,27 +390,6 @@ config.arch.%:
 	cp -Pa $(CURDIR)/src $(BUILDDIR_$*)/
 	cp -Pa $(CURDIR)/man $(BUILDDIR_$*)/
 	cd $(BUILDDIR_$*) && ./configure $($*_configure_flags)
-	if [ "$(BUILDDIR_$*)" = "$(BUILDDIR_extras)" ]; then \
-	  have="NDK_SET_VAR"; \
-	  /bin/echo -e "#ifndef $$have\n#define $$have  1\n#endif" >> $(BUILDDIR_$*)/objs/ngx_auto_config.h; \
-	fi
-
-config.src:
-	dh_testdir
-	mkdir -p $(BUILDDIR_src)
-
-config.ndksrc:
-	dh_testdir
-	mkdir -p $(BUILDDIR_ndksrc)
-
-clean.njs:
-	mkdir -p $(MODULESDIR)/njs/build/src
-	find $(MODULESDIR)/njs -name njs -type f -delete
-	find $(MODULESDIR)/njs -name "*.err" -type f -delete
-	find $(MODULESDIR)/njs/build -name "Makefile" -type f -delete
-	find $(MODULESDIR)/njs/build/src -name "*dep" -type f -delete
-	rm -rf $(CURDIR)/debian/libnginx-mod-njs
-
 
 clean.%:
 	rm -rf $(BUILDDIR_$*)
