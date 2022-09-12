@@ -1,3 +1,9 @@
+#
+# default nginx module
+#
+#------------------------------------------------------------------------------
+
+
 ngx_addon_name=ngx_http_headers_more_filter_module
 
 HEADERS_MORE_SRCS="                                                         \

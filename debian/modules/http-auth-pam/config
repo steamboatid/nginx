@@ -1,3 +1,9 @@
+#
+# default nginx module
+#
+#------------------------------------------------------------------------------
+
+
 ngx_addon_name=ngx_http_auth_pam_module
 
 if test -n "$ngx_module_link"; then

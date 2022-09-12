@@ -1,3 +1,9 @@
+#
+# default nginx module
+#
+#------------------------------------------------------------------------------
+
+
 if [ "$HTTP_PROXY" = "YES" ]; then
     have=NGX_HTTP_PROXY . auto/have
 fi

@@ -1,4 +1,10 @@
 # vim:ft=sh:
+#
+# default nginx module
+#
+#------------------------------------------------------------------------------
+
+
 ngx_addon_name=ngx_http_fancyindex_module
 
 if [ "$ngx_module_link" = DYNAMIC ] ; then

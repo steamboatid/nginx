@@ -1,3 +1,9 @@
+#
+# default nginx module
+#
+#------------------------------------------------------------------------------
+
+
 ngx_addon_name="ngx_rtmp_module"
 
 RTMP_CORE_MODULES="                                         \
@@ -130,4 +136,3 @@ else
 fi
 
 USE_OPENSSL=YES
-

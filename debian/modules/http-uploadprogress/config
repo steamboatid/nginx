@@ -1,4 +1,11 @@
+#
+# default nginx module
+#
+#------------------------------------------------------------------------------
+
+
 ngx_addon_name=ngx_http_uploadprogress_module
+
 if test -n "$ngx_module_link"; then
     ngx_module_type=FILTER
     ngx_module_name=ngx_http_uploadprogress_module

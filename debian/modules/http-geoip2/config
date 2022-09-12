@@ -1,3 +1,9 @@
+#
+# default nginx module
+#
+#------------------------------------------------------------------------------
+
+
 ngx_feature="MaxmindDB library"
 ngx_feature_name=
 ngx_feature_run=no

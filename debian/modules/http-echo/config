@@ -1,3 +1,9 @@
+#
+# default nginx module
+#
+#------------------------------------------------------------------------------
+
+
 ngx_addon_name=ngx_http_echo_module
 
 ECHO_SRCS="                                                                 \
