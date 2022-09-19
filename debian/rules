@@ -1,19 +1,4 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
-
-#----------------- dkverbosev2
-DH_VERBOSE=1
-export DH_VERBOSE
-export DH_OPTIONS
-export DEB_BUILD_OPTIONS
-export DEB_BUILD_PROFILES
-export DPKG_EXPORT_BUILDFLAGS
-export SHELL
-export DEB_CFLAGS_MAINT_APPEND
-export DEB_LDFLAGS_MAINT_APPEND
-#----------------- end
-
-#!/usr/bin/make -f
 #export DH_VERBOSE=1
 
 export LUAJIT_INC=/usr/include/luajit-2.1
@@ -29,14 +14,12 @@ openssl_ver:=$(shell openssl version | cut -d' ' -f2)
 
 # http-lua \
 # stream-lua \
-#	http-upsync \
-#	stream-upsync \
-#	ssl-ct \
-#	stream-geoip2 \
 #	http-waf \
-#	http-geoip2 \
-#	http-js \
-#	stream-js \
+# http-js \
+# stream-js
+# http-upsync \
+# stream-upsync \
+#	ssl-ct
 
 
 FLAVOURS := core full light extras static
@@ -84,7 +67,10 @@ DYN_MODS := \
 	http-security-headers \
 	http-bot-verifier \
 	http-doh \
-	http-google-filter
+	http-google-filter \
+	stream-geoip2 \
+	http-geoip2
+
 
 
 MODULESDIR = $(CURDIR)/debian/modules
@@ -253,16 +239,24 @@ extras_configure_flags := \
 			--add-dynamic-module=$(MODULESDIR)/http-sysguard \
 			--add-dynamic-module=$(MODULESDIR)/http-testcookie-access \
 			--add-dynamic-module=$(MODULESDIR)/http-webp \
+			\
+			--add-dynamic-module=$(MODULESDIR)/http-geoip2
 
 
-#	--add-module=$(MODULESDIR)=debian/modules/http-geoip2 \
+
+
+#	--add-dynamic-module=$(MODULESDIR)/ssl-ct \
+#	--add-module=$(MODULESDIR)/http-upsync \
+#	--add-module=$(MODULESDIR)/stream-upsync
+#	--add-module=$(MODULESDIR)/njs/nginx
+
 #	--add-module=$(MODULESDIR)/http-waf \
 #	--add-module=$(MODULESDIR)/ssl-ct \
+#	--add-module=$(MODULESDIR)/http-upsync \
+#	--add-module=$(MODULESDIR)/stream-upsync \
+#	--add-module=$(MODULESDIR)/njs/nginx \
 # --add-dynamic-module=$(MODULESDIR)/http-lua \
 # --add-dynamic-module=$(MODULESDIR)/stream-lua \
-#	--add-dynamic-module=$(MODULESDIR)/http-upsync \
-#	--add-dynamic-module=$(MODULESDIR)/stream-upsync \
-#	--add-dynamic-module=$(MODULESDIR)/njs/nginx \
 
 
 
@@ -325,7 +319,16 @@ static_configure_flags := \
 			--add-module=$(MODULESDIR)/http-testcookie-access \
 			--add-module=$(MODULESDIR)/http-upstream-check \
 			--add-module=$(MODULESDIR)/http-webp \
+			\
 			--add-module=$(MODULESDIR)/ssl-ct \
+			--add-module=$(MODULESDIR)/http-geoip2 \
+			--add-module=$(MODULESDIR)/http-upsync \
+			--add-module=$(MODULESDIR)/stream-upsync \
+			--add-module=$(MODULESDIR)/njs/nginx
+
+
+
+
 
 %:
 	dh $@ --without autoreconf
@@ -428,11 +431,6 @@ clean.njs:
 
 clean.%:
 	rm -rf $(BUILDDIR_$*)
-
-
-
-override_dh_shlibdeps: 
-	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info 
 
 
 .PHONY: config_patch_modules clean_patch_modules

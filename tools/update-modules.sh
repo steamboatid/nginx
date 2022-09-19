@@ -229,7 +229,7 @@ wait_backs_wpatt "update"
 printf "\n\n --- grep fatal|warning|error: \n\n"
 cd $LOGDIR
 pwd
-grep -i "error\|warning\|fatal" * | grep -v "is now" | sort -u
+grep -i "error\|warning\|fatal" * | grep -iv "is now" | sort -u
 
 printf "\n\n --- done \n"
 

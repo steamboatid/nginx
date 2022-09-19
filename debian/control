@@ -862,3 +862,27 @@ Description: A filter module which makes google mirror much easier to deploy.
  have been built-in already. The native nginx module ensure the efficiency of
  handling cookies, gstatic scoures and redirections.
  For more details please visit https://github.com/GetPageSpeed/ngx_http_google_filter_module
+
+Package: libnginx-mod-http-geoip2
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends},
+Recommends: nginx,
+Description: GeoIP2 HTTP module for Nginx
+ The ngx_http_geoip2 module creates variables with values depending on the
+ client IP address, using the precompiled MaxMind GeoIP2 databases.
+ .
+ Those variables include country, region, city, latitude, longitude, postal
+ code, etc.
+
+Package: libnginx-mod-stream-geoip2
+Architecture: any
+Depends: libnginx-mod-stream (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Recommends: nginx,
+Description: GeoIP2 Stream module for Nginx
+ The ngx_stream_geoip2 module creates variables with values depending on the
+ client IP address, using the precompiled MaxMind GeoIP2 databases.
+ .
+ Those variables include country, region, city, latitude, longitude, postal
+ code, etc.
