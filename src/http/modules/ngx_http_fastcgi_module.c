@@ -972,8 +972,8 @@ ngx_http_fastcgi_create_request(ngx_http_request_t *r)
     }
 
 
-		// 8M max
-    if (len > 8*1048576) {
+		// 8M max, 8*1048576, 65535
+    if (len > 65535) {
         ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
                       "fastcgi request record is too big: %uz", len);
         return NGX_ERROR;
