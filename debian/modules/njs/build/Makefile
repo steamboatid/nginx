@@ -6,8 +6,8 @@ NJS_STATIC_LINK = ar -r -c
 NJS_LINK = cc -O
 NJS_CFLAGS =  -pipe -fPIC -fvisibility=hidden -O -W -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wmissing-prototypes -Werror -g -fexcess-precision=standard -O -lpcre2-8 -O3  -Wno-deprecated-declarations -DNDK_SET_VAR -DNDK_UPSTREAM_LIST
 
-NJS_VER = 0.7.8
-#define NJS_VERSION_NUMBER          0x000708
+NJS_VER = 0.7.10
+#define NJS_VERSION_NUMBER          0x00070a
 NJS_TYPES_VER = $(NJS_VER)
 
 NPM = npm
@@ -82,7 +82,7 @@ NJS_LIB_OBJS = build/src/njs_diyfp.o \
 	build/build/njs_modules.o \
 	
 
-libnjs: build/libnjs.a
+libnjs: build/libnjs.a pc
 
 build/libnjs.a:   \
 	build/njs_auto_config.h \
@@ -995,6 +995,16 @@ ts_publish: ts_clean build/njs-types-$(NJS_TYPES_VER).tgz
 
 ts_clean:
 	rm -rf build/ts
+
+pc: build/njs.pc
+
+build/njs.pc: build/njs_auto_config.h
+	sed -e "s,@PREFIX@,/tb2/root/github/nginx/debian/modules/njs/build," \
+		-e "s,@LIBDIR@,/tb2/root/github/nginx/debian/modules/njs/build," \
+		-e "s,@CFLAGS@,-I/tb2/root/github/nginx/debian/modules/njs/build -I/tb2/root/github/nginx/debian/modules/njs/src," \
+		-e "s,@VERSION@,$(NJS_VER)," \
+		-e "s,@EXTRA_LIBS@,-lm   ," \
+		src/njs.pc.in > $@
 
 shell_test:
 	@echo "Skipping expect tests"

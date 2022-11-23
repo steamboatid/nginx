@@ -112,6 +112,11 @@
 #endif
 
 
+#ifndef NJS_HAVE_GCC_ATTRIBUTE_FALLTHROUGH
+#define NJS_HAVE_GCC_ATTRIBUTE_FALLTHROUGH  1
+#endif
+
+
 #ifndef NJS_HAVE_DENORMALS_CONTROL
 #define NJS_HAVE_DENORMALS_CONTROL  1
 #endif
@@ -139,6 +144,11 @@
 
 #ifndef NJS_HAVE_STAT_ATIM
 #define NJS_HAVE_STAT_ATIM  1
+#endif
+
+
+#ifndef NJS_HAVE_COMPUTED_GOTO
+#define NJS_HAVE_COMPUTED_GOTO  1
 #endif
 
 

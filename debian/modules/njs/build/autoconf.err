@@ -47,6 +47,8 @@ checking for GCC __attribute__ aligned
 ----------------------------------------
 checking for GCC __attribute__ packed
 ----------------------------------------
+checking for GCC __attribute__ fallthrough
+----------------------------------------
 checking for Address sanitizer
 build/autotest.c: In function 'main':
 build/autotest.c:12:19: error: expected expression before '}' token
@@ -154,6 +156,8 @@ cc -lpcre2-8 -O3 -Wno-deprecated-declarations -DNDK_SET_VAR -DNDK_UPSTREAM_LIST 
 ----------
 ----------------------------------------
 checking for stat.st_atim
+----------------------------------------
+checking for Computed goto
 ----------------------------------------
 checking for explicit_bzero()
 ----------------------------------------
