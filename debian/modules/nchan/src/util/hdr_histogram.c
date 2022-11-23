@@ -4,6 +4,10 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+#include <nchan_module.h>
+#include <util/shmem.h>
+#include <store/memory/store.h>
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -13,10 +17,6 @@
 #include <stdint.h>
 #include <errno.h>
 #include <inttypes.h>
-
-#include <nchan_module.h>
-#include <util/shmem.h>
-#include <store/memory/store.h>
 
 #include "hdr_histogram.h"
 
@@ -129,7 +129,7 @@ static int64_t value_from_index(int32_t bucket_index, int32_t sub_bucket_index, 
     return ((int64_t) sub_bucket_index) << (bucket_index + unit_magnitude);
 }
 
-int32_t counts_index_for(const struct hdr_histogram* h, int64_t value)
+static int32_t counts_index_for(const struct hdr_histogram* h, int64_t value)
 {
     int32_t bucket_index     = get_bucket_index(h, value);
     int32_t sub_bucket_index = get_sub_bucket_index(value, bucket_index, h->unit_magnitude);

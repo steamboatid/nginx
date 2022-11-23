@@ -3529,7 +3529,7 @@ lua_max_running_timers
 
 Controls the maximum number of "running timers" allowed.
 
-Running timers are those timers whose user callback functions are still running.
+Running timers are those timers whose user callback functions are still running or `lightthreads` spawned in callback functions are still running.
 
 When exceeding this limit, Nginx will stop running the callbacks of newly expired timers and log an error message "N lua_max_running_timers are not enough" where "N" is the current value of this directive.
 
@@ -3838,7 +3838,8 @@ For example:
  }
 ```
 
-That is, Nginx variables cannot be created on-the-fly.
+That is, Nginx variables cannot be created on-the-fly. Here is a list of pre-defined
+[Nginx variables](http://nginx.org/en/docs/varindex.html).
 
 Some special Nginx variables like `$args` and `$limit_rate` can be assigned a value,
 many others are not, like `$query_string`, `$arg_PARAMETER`, and `$http_NAME`.
@@ -9034,6 +9035,8 @@ ngx.worker.pids
 **context:** *set_by_lua&#42;, rewrite_by_lua&#42;, access_by_lua&#42;, content_by_lua&#42;, header_filter_by_lua&#42;, body_filter_by_lua&#42;, log_by_lua&#42;, ngx.timer.&#42;, exit_worker_by_lua&#42;*
 
 This function returns a Lua table for all Nginx worker process ID (PID). Nginx uses channel to send the current worker PID to another worker in the worker process start or restart. So this API can get all current worker PID.
+
+This API was first introduced in the `0.10.23` release.
 
 [Back to TOC](#nginx-api-for-lua)
 

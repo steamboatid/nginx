@@ -39,7 +39,6 @@ typedef struct {
   ngx_str_t                     url;
   ngx_flag_t                    url_enabled;
   time_t                        ping_interval;
-  time_t                        cluster_check_interval;
   ngx_str_t                     namespace;
   nchan_redis_storage_mode_t    storage_mode;
   ngx_int_t                     nostore_fastpublish;
@@ -49,6 +48,11 @@ typedef struct {
   unsigned                      enabled:1;
   void                         *nodeset;
   void                         *privdata;
+  
+  struct {
+    ngx_http_complex_value_t     *upstream_name;
+  }                             stats;
+  
 } nchan_redis_conf_t;
 
 typedef struct {
@@ -161,20 +165,6 @@ typedef struct {
   ngx_rwlock_t                   lock;
 } nchan_worker_msg_sentinel_t;
 
-typedef struct {
-  ngx_atomic_uint_t      channels;
-  ngx_atomic_uint_t      subscribers;
-  ngx_atomic_uint_t      total_published_messages;
-  ngx_atomic_uint_t      messages;
-  ngx_atomic_uint_t      redis_pending_commands;
-  ngx_atomic_uint_t      redis_connected_servers;
-  ngx_atomic_uint_t      ipc_total_alerts_sent;
-  ngx_atomic_uint_t      ipc_total_alerts_received;
-  ngx_atomic_uint_t      ipc_queue_size;
-  ngx_atomic_uint_t      ipc_total_send_delay;
-  ngx_atomic_uint_t      ipc_total_receive_delay;
-} nchan_stub_status_t;
-
 typedef struct subscriber_s subscriber_t;
 
 typedef struct {
@@ -270,12 +260,6 @@ typedef struct {
  ngx_atomic_uint_t               max_messages;
 } nchan_loc_conf_shared_data_t;
 
-typedef enum {
-  NCHAN_REDIS_OPTIMIZE_UNSET = -1,
-  NCHAN_REDIS_OPTIMIZE_CPU = 1,
-  NCHAN_REDIS_OPTIMIZE_BANDWIDTH = 2
-} nchan_redis_optimize_t;
-
 typedef struct {
   int family;
   int prefix_size;
@@ -321,9 +305,27 @@ typedef struct {
 } nchan_redis_tls_settings_t;
 
 typedef struct {
+    ngx_msec_t      min;
+    ngx_msec_t      max;
+    double          jitter_multiplier;
+    double          backoff_multiplier;
+} nchan_backoff_settings_t;
+
+typedef struct {
   struct {
-      ngx_msec_t                    connect_timeout;
-      nchan_redis_optimize_t        optimize_target;
+      ngx_int_t                     retry_commands;
+      ngx_msec_t                    retry_commands_max_wait;
+      ngx_msec_t                    node_connect_timeout;  
+      ngx_msec_t                    cluster_connect_timeout;
+      ngx_msec_t                    cluster_max_failing_msec;
+      ngx_int_t                     load_scripts_unconditionally;
+      ngx_int_t                     accurate_subscriber_count;
+      nchan_backoff_settings_t      reconnect_delay;
+      nchan_backoff_settings_t      cluster_recovery_delay;
+      nchan_backoff_settings_t      cluster_check_interval;
+      nchan_backoff_settings_t      idle_channel_ttl;
+      ngx_msec_t                    idle_channel_ttl_safety_margin;
+      ngx_msec_t                    command_timeout;
       ngx_int_t                     master_weight;
       ngx_int_t                     slave_weight;
       ngx_int_t                     blacklist_count;
@@ -331,6 +333,10 @@ typedef struct {
       ngx_str_t                     username;
       ngx_str_t                     password;
       nchan_redis_tls_settings_t    tls;
+      struct {
+        ngx_int_t                     enabled;
+        time_t                        max_detached_time_sec;
+      }                             stats;
   }                               redis;
   nchan_loc_conf_t                *upstream_nchan_loc_conf;
 } nchan_srv_conf_t;

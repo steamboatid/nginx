@@ -7,17 +7,14 @@
 
 #include <ngx_config.h>
 #include <ngx_core.h>
-#include <unistd.h>
 
 
 ngx_int_t
 ngx_daemon(ngx_log_t *log)
 {
     int  fd;
-    /* retain the return value for passing back to caller */
-    pid_t pid_child = fork();
 
-    switch (pid_child) {
+    switch (fork()) {
     case -1:
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "fork() failed");
         return NGX_ERROR;
@@ -26,8 +23,7 @@ ngx_daemon(ngx_log_t *log)
         break;
 
     default:
-        /* let caller do the exit() */
-        return pid_child;
+        exit(0);
     }
 
     ngx_parent = ngx_pid;

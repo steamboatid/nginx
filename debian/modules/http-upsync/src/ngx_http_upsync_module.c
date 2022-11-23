@@ -875,6 +875,7 @@ ngx_http_upsync_add_peers(ngx_cycle_t *cycle,
             peer->next = peers->peer;
             peers->peer = peer;
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK) 
             ngx_uint_t index;
             ngx_addr_t *addrs;
@@ -1122,6 +1123,7 @@ ngx_http_upsync_del_peers(ngx_cycle_t *cycle,
                              len, len) == 0)
             {
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK) 
                 ngx_http_upstream_check_delete_dynamic_peer(
                                                     peers->name, server->addrs);
@@ -1231,6 +1233,7 @@ ngx_http_upsync_replace_peers(ngx_cycle_t *cycle,
 
             peer->conns = 0;
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK) 
             peer->check_index = tmp_peer[i].check_index;
 #endif

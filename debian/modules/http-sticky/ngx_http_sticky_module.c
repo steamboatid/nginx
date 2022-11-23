@@ -10,12 +10,13 @@
 
 #include "ngx_http_sticky_misc.h"
 
-/** patch **/
+/** patch //dkmods **/
 #if (NGX_UPSTREAM_CHECK_MODULE)
 #include "ngx_http_upstream_check_handler.h"
 #endif
 
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
 #include "ngx_http_upstream_check_module.h"
 #endif
@@ -319,6 +320,7 @@ static ngx_int_t ngx_http_get_sticky_peer(ngx_peer_connection_t *pc, void *data)
 					return NGX_BUSY;
 				}
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
                 ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
                                "get sticky peer, check_index: %ui",
@@ -345,6 +347,8 @@ static ngx_int_t ngx_http_get_sticky_peer(ngx_peer_connection_t *pc, void *data)
 			/* ensure the peer is not marked as down */
 			if (!peer->down) {
 
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
                 ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
                                "get sticky peer, check_index: %ui",
@@ -367,6 +371,8 @@ static ngx_int_t ngx_http_get_sticky_peer(ngx_peer_connection_t *pc, void *data)
 					/* mark the peer as tried */
 					iphp->rrp.tried[n] |= m;
 				}
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
                 }
 #endif

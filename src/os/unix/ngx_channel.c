@@ -43,7 +43,7 @@ ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size,
         /*
          * We have to use ngx_memcpy() instead of simple
          *   *(int *) CMSG_DATA(&cmsg.cm) = ch->fd;
-         * because some gcc 4.4 with -O2/3/s optimization issues the warning:
+         * because some gcc 4.4 with -O3/3/s optimization issues the warning:
          *   dereferencing type-punned pointer will break strict-aliasing rules
          *
          * Fortunately, gcc with -O1 compiles this ngx_memcpy()

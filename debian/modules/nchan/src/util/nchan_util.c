@@ -329,7 +329,7 @@ int nchan_cstrmatch(char *cstr, ngx_int_t n, ...) {
   return rc;
 }
 
-int nchan_cstr_startswith(char *cstr, char *match) {
+int nchan_cstr_startswith(const char *cstr, const char *match) {
   for(/*void*/; *match != '\0'; cstr++, match++) {
     if(*cstr == '\0' || *cstr != *match)
       return 0;
@@ -538,7 +538,7 @@ typedef struct {
   void          (*cb)(void *pd);
 } oneshot_timer_t;
 
-void oneshot_timer_callback(ngx_event_t *ev) {
+static void oneshot_timer_callback(ngx_event_t *ev) {
   oneshot_timer_t  *timer = container_of(ev, oneshot_timer_t, ev);
   timer->cb(ev->data);
   ngx_free(timer);
@@ -567,7 +567,7 @@ typedef struct {
   ngx_int_t    (*cb)(void *pd);
 } interval_timer_t;
 
-void interval_timer_callback(ngx_event_t *ev) {
+static void interval_timer_callback(ngx_event_t *ev) {
   interval_timer_t  *timer = container_of(ev, interval_timer_t, ev);
   ngx_int_t rc = timer->cb(ev->data);
   if((rc == NGX_OK || rc == NGX_AGAIN) && ev->timedout) {
@@ -676,7 +676,7 @@ int nchan_get_rest_of_line_in_cstr(const char *cstr, const char *line_start, ngx
 }
 
 //converts string to positive double float
-static double nchan_atof(u_char *line, ssize_t n) {
+double nchan_atof(u_char *line, ssize_t n) {
   ssize_t cutoff, cutlim;
   double  value = 0;
   
@@ -1160,6 +1160,64 @@ ngx_flag_t nchan_need_to_deflate_message(nchan_loc_conf_t *cf) {
 #else
   return 0;
 #endif
+}
+
+
+static void nchan_conf_set_backoff_unsets(nchan_backoff_settings_t *cur, const nchan_backoff_settings_t *prev) {
+  if(cur->min == NGX_CONF_UNSET_MSEC) {
+    cur->min = prev->min;
+  }
+  if(cur->jitter_multiplier == NGX_CONF_UNSET) {
+    cur->jitter_multiplier = prev->jitter_multiplier;
+  }
+  if(cur->backoff_multiplier == NGX_CONF_UNSET) {
+    cur->backoff_multiplier = prev->backoff_multiplier;
+  }
+  if(cur->max == NGX_CONF_UNSET_MSEC) {
+    cur->max = prev->max;
+  }
+}
+
+void nchan_conf_merge_backoff_value(nchan_backoff_settings_t *cur, const nchan_backoff_settings_t *prev, const nchan_backoff_settings_t *defaults) {
+  if(prev) {
+    nchan_conf_set_backoff_unsets(cur, prev);
+  }
+  if(defaults) {
+    nchan_conf_set_backoff_unsets(cur, defaults);
+  }
+}
+
+const nchan_backoff_settings_t NCHAN_CONF_UNSEC_BACKOFF = {
+  .min = NGX_CONF_UNSET_MSEC,
+  .backoff_multiplier = NGX_CONF_UNSET,
+  .jitter_multiplier = NGX_CONF_UNSET,
+  .max = NGX_CONF_UNSET_MSEC
+};
+
+ngx_msec_t nchan_set_next_backoff(ngx_msec_t *backoff, nchan_backoff_settings_t *settings) {
+  double next_backoff = *backoff;
+  if(next_backoff == 0 || settings->backoff_multiplier == 0) {
+    next_backoff = settings->min;
+  }
+  else if(settings->backoff_multiplier > 0) {
+    next_backoff *= (settings->backoff_multiplier + 1.0);
+  }
+  if(settings->max > 0 && next_backoff > settings->max) {
+    next_backoff = settings->max;
+  }
+  
+  if(settings->jitter_multiplier > 0) {
+    double max_jitter = (double )next_backoff * settings->jitter_multiplier;
+    next_backoff = next_backoff - (ngx_msec_t)(max_jitter/2.0) + (ngx_random() % (ngx_msec_t )(max_jitter));
+  }
+  if(settings->max > 0 && next_backoff > settings->max) {
+    next_backoff = settings->max;
+  }
+  if(next_backoff <= 0) { //maybe as the result of large jitter and floating point precision error?
+    next_backoff = 1; //1ms pls
+  }
+  *backoff = next_backoff;
+  return next_backoff;
 }
 
 ngx_int_t nchan_deflate_message_if_needed(nchan_msg_t *msg, nchan_loc_conf_t *cf, ngx_http_request_t *r, ngx_pool_t  *pool) {

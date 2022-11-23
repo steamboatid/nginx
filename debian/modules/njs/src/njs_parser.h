@@ -81,6 +81,8 @@ struct njs_parser_s {
     njs_int_t                       ret;
     uintptr_t                       undefined_id;
 
+    uint8_t                         use_lhs;
+
     uint8_t                         module;
     njs_bool_t                      strict_semicolon;
 
@@ -155,6 +157,11 @@ njs_int_t njs_parser_serialize_ast(njs_parser_node_t *node, njs_chb_t *chain);
 #define njs_parser_is_lvalue(node)                                            \
     ((node)->token_type == NJS_TOKEN_NAME                                     \
      || (node)->token_type == NJS_TOKEN_PROPERTY)
+
+
+#define njs_parser_is_primitive(node)                                         \
+    ((node)->token_type >= NJS_TOKEN_NULL                                     \
+     && (node)->token_type <= NJS_TOKEN_STRING)
 
 
 #define njs_parser_syntax_error(parser, fmt, ...)                             \

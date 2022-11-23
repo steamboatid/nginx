@@ -14,9 +14,14 @@
 #include <ctype.h>
 
 #include <naxsi_const.h>
+#include <naxsi_net.h>
 
 #include "libinjection/src/libinjection_sqli.h"
 #include "libinjection/src/libinjection_xss.h"
+
+#ifdef _WIN32
+#include <naxsi_windows.h>
+#endif // _WIN32
 
 extern ngx_module_t ngx_http_naxsi_module;
 
@@ -127,6 +132,7 @@ typedef enum NAXSI_MATCH_ZONE
   BODY,
   RAW_BODY,
   FILE_EXT,
+  ANY,
   UNKNOWN
 } naxsi_match_zone_t;
 
@@ -152,49 +158,12 @@ typedef struct
 } ngx_http_custom_rule_location_t;
 
 /*
-** WhiteList Rules Definition :
-** A whitelist contains :
-** - an URI
-**
-** - one or several sets containing :
-**  - an variable name ('foo') associated with a zone ($GET_VAR:foo)
-**  - one or several rules id to whitelist
-*/
-
-typedef struct
-{
-  /* match in full body (POST DATA) */
-  ngx_flag_t body : 1;
-  /* match in [name] var of body */
-  ngx_flag_t body_var : 1;
-  /* match in all headers */
-  ngx_flag_t headers : 1;
-  /* match in [name] var of headers */
-  ngx_flag_t headers_var : 1;
-  /* match in URI */
-  ngx_flag_t url : 1;
-  /* match in args (bla.php?<ARGS>) */
-  ngx_flag_t args : 1;
-  /* match in [name] var of args */
-  ngx_flag_t args_var : 1;
-  /* match on a global flag : weird_request, big_body etc. */
-  ngx_flag_t flags : 1;
-  /* match on file upload extension */
-  ngx_flag_t file_ext : 1;
-  /* set if defined "custom" match zone (GET_VAR/POST_VAR/...)  */
-  ngx_array_t* ids;
-  ngx_str_t*   name;
-} ngx_http_whitelist_location_t;
-
-/*
 ** this struct is used to aggregate all whitelist
 ** that point to the same URI or the same VARNAME
 ** all the "subrules" will then be stored in the "whitelist_locations"
 */
 typedef struct
 {
-  /*ngx_http_whitelist_location_t **/
-  ngx_array_t* whitelist_locations;
   /* zone to wich the WL applies */
   naxsi_match_zone_t zone;
   /* if the "name" is only an url, specify it */
@@ -239,6 +208,8 @@ typedef struct
   ngx_flag_t flags : 1;
   /* match on file upload extension */
   ngx_flag_t file_ext : 1;
+  /* match on any matchzone */
+  ngx_flag_t any : 1;
   /* set if defined "custom" match zone (GET_VAR/POST_VAR/...)  */
   ngx_flag_t custom_location : 1;
   ngx_int_t  custom_location_only;
@@ -442,6 +413,7 @@ typedef struct
   /* did libinjection sql/xss matched ? */
   ngx_flag_t libinjection_sql : 1;
   ngx_flag_t libinjection_xss : 1;
+  u_char     request_id[NAXSI_REQUEST_ID_SIZE];
 } ngx_http_request_ctx_t;
 
 /*
@@ -532,7 +504,10 @@ strfaststr(const unsigned char* haystack,
 
 #define sstrfaststr(h, hl, n, nl)                                                                  \
   strfaststr(                                                                                      \
-    (const unsigned char*)(h), (unsigned int)(hl), (const unsigned char*)(n), (unsigned int)(nl));
+    (const unsigned char*)(h), (unsigned int)(hl), (const unsigned char*)(n), (unsigned int)(nl))
+
+#define cstrfaststr(h, hl, n)                                                                      \
+  strfaststr((const unsigned char*)(h), (unsigned int)(hl), (const unsigned char*)(n), strlen(n))
 
 char*
 strnchr(const char* s, int c, int len);
@@ -634,6 +609,12 @@ ngx_http_apply_rulematch_v_n(ngx_http_rule_t*        r,
                              naxsi_match_zone_t      zone,
                              ngx_int_t               nb_match,
                              ngx_int_t               target_name);
+
+int
+naxsi_is_illegal_host_name(const ngx_str_t* server_name);
+
+void
+naxsi_generate_request_id(u_char* bytes);
 
 /*
 ** externs for internal rules that requires it.

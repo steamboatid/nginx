@@ -46,6 +46,7 @@
 #define NGX_HTTP_LB_HASH_MODULA    8
 #define NGX_HTTP_LB_HASH_KETAMA    16
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK) 
 
 extern ngx_uint_t ngx_http_upstream_check_add_dynamic_peer(ngx_pool_t *pool,

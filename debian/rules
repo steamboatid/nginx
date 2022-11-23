@@ -1,4 +1,19 @@
 #!/usr/bin/make -f
+# -*- makefile -*-
+
+#----------------- dkverbosev2
+DH_VERBOSE=1
+export DH_VERBOSE
+export DH_OPTIONS
+export DEB_BUILD_OPTIONS
+export DEB_BUILD_PROFILES
+export DPKG_EXPORT_BUILDFLAGS
+export SHELL
+export DEB_CFLAGS_MAINT_APPEND
+export DEB_LDFLAGS_MAINT_APPEND
+#----------------- end
+
+#!/usr/bin/make -f
 #export DH_VERBOSE=1
 
 export LUAJIT_INC=/usr/include/luajit-2.1
@@ -20,6 +35,7 @@ openssl_ver:=$(shell openssl version | cut -d' ' -f2)
 # http-upsync \
 # stream-upsync \
 #	ssl-ct
+#	http-uploadprogress \
 
 
 FLAVOURS := core full light extras static
@@ -38,7 +54,6 @@ DYN_MODS := \
 	http-ndk \
 	http-perl \
 	http-subs-filter \
-	http-uploadprogress \
 	http-xslt-filter \
 	http-vhost-traffic-status \
 	http-brotli-filter \
@@ -215,7 +230,6 @@ extras_configure_flags := \
 			--add-dynamic-module=$(MODULESDIR)/http-echo \
 			--add-dynamic-module=$(MODULESDIR)/http-fancyindex \
 			--add-dynamic-module=$(MODULESDIR)/http-headers-more-filter \
-			--add-dynamic-module=$(MODULESDIR)/http-uploadprogress \
 			--add-dynamic-module=$(MODULESDIR)/http-upstream-fair \
 			--add-dynamic-module=$(MODULESDIR)/nchan \
 			--add-dynamic-module=$(MODULESDIR)/rtmp \
@@ -244,6 +258,7 @@ extras_configure_flags := \
 
 
 
+#	--add-dynamic-module=$(MODULESDIR)/http-uploadprogress \
 
 #	--add-dynamic-module=$(MODULESDIR)/ssl-ct \
 #	--add-module=$(MODULESDIR)/http-upsync \
@@ -295,7 +310,6 @@ static_configure_flags := \
 			--add-module=$(MODULESDIR)/http-echo \
 			--add-module=$(MODULESDIR)/http-fancyindex \
 			--add-module=$(MODULESDIR)/http-headers-more-filter \
-			--add-module=$(MODULESDIR)/http-uploadprogress \
 			--add-module=$(MODULESDIR)/http-upstream-fair \
 			--add-module=$(MODULESDIR)/nchan \
 			--add-module=$(MODULESDIR)/rtmp \
@@ -326,6 +340,7 @@ static_configure_flags := \
 			--add-module=$(MODULESDIR)/stream-upsync \
 			--add-module=$(MODULESDIR)/njs/nginx
 
+#	--add-module=$(MODULESDIR)/http-uploadprogress \
 
 
 
@@ -337,9 +352,10 @@ override_dh_auto_configure: config_patch_modules $(foreach flavour,$(FLAVOURS),c
 override_dh_auto_build:     $(foreach flavour,$(FLAVOURS),build.arch.$(flavour)) build.src build.ndksrc
 override_dh_strip:          $(foreach flavour,$(FLAVOURS),strip.arch.$(flavour)) $(foreach mod,$(DYN_MODS),strip.mods.$(mod))
 override_dh_clean:          clean_patch_modules $(foreach flavour,$(FLAVOURS),clean.$(flavour)) clean.src clean.ndksrc
-	mkdir -p $(MODULESDIR)/http-uploadprogress/test
-	find $(MODULESDIR)/http-uploadprogress/test -name test -type f -delete
 	dh_clean
+
+#	mkdir -p $(MODULESDIR)/http-uploadprogress/test
+#	find $(MODULESDIR)/http-uploadprogress/test -name test -type f -delete
 
 override_dh_install:
 	dh_install
@@ -431,6 +447,12 @@ clean.njs:
 
 clean.%:
 	rm -rf $(BUILDDIR_$*)
+
+
+
+
+override_dh_shlibdeps: 
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info 
 
 
 .PHONY: config_patch_modules clean_patch_modules

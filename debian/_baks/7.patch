@@ -1,0 +1,194 @@
+From f76e45338cf987babccf989b0b98861304af66bb Mon Sep 17 00:00:00 2001
+From: Mathew Heard <splitice@users.noreply.github.com>
+Date: Tue, 24 Aug 2021 17:03:51 +1000
+Subject: [PATCH] scalable accept language using hash
+
+---
+ .gitignore                                    |  2 +
+ config                                        | 27 +++----
+ ...ule.c => ngx_http_accept_language_module.c | 80 ++++++++++++-------
+ 3 files changed, 65 insertions(+), 44 deletions(-)
+ create mode 100644 .gitignore
+ rename src/ngx_http_accept_language_module.c => ngx_http_accept_language_module.c (66%)
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..2d79ca1
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,2 @@
++
++.vscode/sftp.json
+diff --git a/config b/config
+index 3d209d5..61a6c85 100644
+--- a/config
++++ b/config
+@@ -1,20 +1,13 @@
+-ngx_feature=
+-ngx_feature_name=
+-ngx_feature_run=no
+-ngx_feature_incs=
+-ngx_feature_path=
+-ngx_feature_libs=
+-ngx_feature_test=
++ngx_addon_name=ngx_http_accept_language_module
+ have=NGX_HTTP_HEADERS . auto/have
+-. auto/feature
+ 
+-if [ $ngx_found = yes ]; then
+-    ngx_addon_name=ngx_http_accept_language_module
+-    HTTP_MODULES="$HTTP_MODULES ngx_http_accept_language_module"
+-    NGX_ADDON_SRCS="$NGX_ADDON_SRCS ${ngx_addon_dir}/src/ngx_http_accept_language_module.c"
++if test -n "$ngx_module_link"; then
++    ngx_module_type=HTTP
++    ngx_module_name=ngx_http_accept_language_module
++    ngx_module_srcs="$ngx_addon_dir/ngx_http_accept_language_module.c"
++
++    . auto/module
+ else
+-    cat << END
+-$0: error: unable to configure the ngx_http_accept_language_module.
+-END
+-    exit 1
+-fi
++    HTTP_MODULES="$HTTP_MODULES ngx_http_accept_language_module"
++    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_accept_language_module.c"
++fi
+\ No newline at end of file
+diff --git a/src/ngx_http_accept_language_module.c b/ngx_http_accept_language_module.c
+similarity index 66%
+rename from src/ngx_http_accept_language_module.c
+rename to ngx_http_accept_language_module.c
+index 3f85cc4..357c0fe 100644
+--- a/src/ngx_http_accept_language_module.c
++++ b/ngx_http_accept_language_module.c
+@@ -16,6 +16,11 @@ static ngx_command_t  ngx_http_accept_language_commands[] = {
+       ngx_null_command
+ };
+ 
++typedef struct ngx_http_accept_language_s {
++  ngx_hash_t hash;
++  ngx_str_t default_language;
++} ngx_http_accept_language_t;
++
+ // No need for any configuration callback
+ static ngx_http_module_t  ngx_http_accept_language_module_ctx = {
+     NULL,  NULL, NULL, NULL,  NULL, NULL, NULL, NULL 
+@@ -39,9 +44,11 @@ ngx_module_t  ngx_http_accept_language_module = {
+ static char * ngx_http_accept_language(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+ {
+   ngx_uint_t          i;
+-  ngx_str_t           *value, *elt, name;
++  ngx_str_t           *value, *snew, name;
+   ngx_http_variable_t *var;
+-  ngx_array_t       *langs_array;
++  ngx_hash_init_t  hash;
++  ngx_http_accept_language_t *al;
++  ngx_hash_keys_arrays_t  hash_keys;
+ 
+   value = cf->args->elts;
+   name = value[1];
+@@ -63,31 +70,53 @@ static char * ngx_http_accept_language(ngx_conf_t *cf, ngx_command_t *cmd, void
+   }
+   
+   var->get_handler = ngx_http_accept_language_variable;
+-  langs_array = ngx_array_create(cf->pool, cf->args->nelts - 1, sizeof(ngx_str_t));
+-  if (langs_array == NULL) {
+-    return NGX_CONF_ERROR;
++
++  al = ngx_pcalloc(cf->pool, sizeof(ngx_http_accept_language_t));
++  if (al == NULL) {
++      return NGX_CONF_ERROR;
+   }
+-  var->data = (uintptr_t) langs_array;
++  
++  hash_keys.pool = cf->pool;
++  hash_keys.temp_pool = cf->temp_pool;
++
++  ngx_hash_keys_array_init(&hash_keys, NGX_HASH_SMALL);
+   
+   for (i = 2; i < cf->args->nelts; i++) {
+-    elt = ngx_array_push(langs_array); 
+-    if (elt == NULL) {
+-      return  NGX_CONF_ERROR;
++    if(al->default_language.len == 0){
++      al->default_language = value[i];
+     }
+-    
+-    *elt = value[i];
++    snew = ngx_palloc(cf->pool, sizeof(ngx_str_t));
++    if (snew == NULL) {
++      return NGX_CONF_ERROR;
++    }
++    *snew = value[i];
++    ngx_hash_add_key(&hash_keys, snew, snew, 0);
++  }
++
++  hash.hash = &al->hash;
++  hash.key = ngx_hash_key_lc;
++  hash.max_size = 512;
++  hash.bucket_size = ngx_align(64, ngx_cacheline_size);
++  hash.name = "accept_key_hash";
++  hash.pool = cf->pool;
++  hash.temp_pool = cf->temp_pool;
++
++  if(ngx_hash_init(&hash, hash_keys.keys.elts, hash_keys.keys.nelts) != NGX_OK) {
++      return NGX_CONF_ERROR;
+   }
++
++  var->data = (uintptr_t)al;
+   
+   return NGX_CONF_OK;
+ }
+ 
+ static ngx_int_t ngx_http_accept_language_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data) 
+ {
+-  ngx_uint_t         i = 0;
+-  ngx_uint_t         found = 0;
+   u_char            *start, *pos, *end;
+-  ngx_array_t       *langs_array = (ngx_array_t *) data;
+-  ngx_str_t         *langs = (ngx_str_t *) langs_array->elts;  
++  ngx_http_accept_language_t    *al = (ngx_http_accept_language_t *) data;
++  ngx_str_t         *l;
++  ngx_uint_t   key;
++
+ 
+   if ( NULL != r->headers_in.accept_language ) {       
+     start = r->headers_in.accept_language->value.data;
+@@ -101,17 +130,13 @@ static ngx_int_t ngx_http_accept_language_variable(ngx_http_request_t *r, ngx_ht
+     
+       while (pos < end && *pos != ',' && *pos != ';') { pos++; }
+     
+-      for (i = 0; i < langs_array->nelts; i++)
+-      {      
+-        if ((ngx_uint_t)(pos - start) >= langs[i].len && ngx_strncasecmp(start, langs[i].data, langs[i].len) == 0) {
+-          found = 1;
+-          break;
+-        }
++      key = ngx_hash_key(start, end - start);
++      l = (ngx_str_t *)ngx_hash_find(&al->hash, key, start, end - start);
++      if(l != NULL){
++        v->data = l->data;
++        v->len  = l->len;
++        goto set;
+       }
+-      if (found)
+-        break;
+-      
+-      i = 0; // If not found default to the first language from the list
+     
+       // We discard the quality value
+       if (*pos == ';') {
+@@ -125,9 +150,10 @@ static ngx_int_t ngx_http_accept_language_variable(ngx_http_request_t *r, ngx_ht
+     }
+   }
+ 
+-  v->data = langs[i].data;
+-  v->len  = langs[i].len;
++  v->data = al->default_language.data;
++  v->len  = al->default_language.len;
+ 
++set:
+   /* Set all required params */
+   v->valid = 1;
+   v->no_cacheable = 0;

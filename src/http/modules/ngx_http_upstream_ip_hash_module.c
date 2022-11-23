@@ -9,6 +9,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
 #include "ngx_http_upstream_check_module.h"
 #endif
@@ -211,6 +212,7 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
             goto next;
         }
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
         ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
             "get ip_hash peer, check_index: %ui",

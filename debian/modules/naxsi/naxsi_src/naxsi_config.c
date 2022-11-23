@@ -1,9 +1,12 @@
 // SPDX-FileCopyrightText: 2016-2019, Thibault 'bui' Koechlin <tko@nbs-system.com>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <ngx_config.h>
+
 #include <naxsi.h>
 #include <naxsi_config.h>
 #include <naxsi_macros.h>
+
 /*
 ** TOP LEVEL configuration parsing code
 */
@@ -101,15 +104,16 @@ naxsi_score(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
       NX_LOG_DEBUG(
         _debug_score, NGX_LOG_EMERG, r, 0, "XX-(debug) special scoring rule (%s)", tmp_ptr);
 
-      return_value_if(!(tmp_end = strchr(tmp_ptr, ':')), NGX_CONF_ERROR);
+      return_value_if(NULL == (tmp_end = strchr(tmp_ptr, ':')), NGX_CONF_ERROR);
 
       return_value_if((len = tmp_end - tmp_ptr) < 1, NGX_CONF_ERROR);
 
-      return_value_if(!(sc = ngx_array_push(rule->sscores)), NGX_CONF_ERROR);
+      return_value_if(NULL == (sc = ngx_array_push(rule->sscores)), NGX_CONF_ERROR);
 
-      return_value_if(!(sc->sc_tag = ngx_pcalloc(r->pool, sizeof(ngx_str_t))), NGX_CONF_ERROR);
+      return_value_if(NULL == (sc->sc_tag = ngx_pcalloc(r->pool, sizeof(ngx_str_t))),
+                      NGX_CONF_ERROR);
 
-      return_value_if(!(sc->sc_tag->data = ngx_pcalloc(r->pool, len + 1)), NGX_CONF_ERROR);
+      return_value_if(NULL == (sc->sc_tag->data = ngx_pcalloc(r->pool, len + 1)), NGX_CONF_ERROR);
 
       memcpy(sc->sc_tag->data, tmp_ptr, len);
       sc->sc_tag->len = len;
@@ -175,7 +179,7 @@ naxsi_score(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
 void*
 naxsi_zone(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
 {
-  int                              tmp_len, has_zone = 0;
+  int                              tmp_len, has_zone = 0, is_any = 0;
   ngx_http_custom_rule_location_t* custom_rule;
   char *                           tmp_ptr, *tmp_end;
 
@@ -188,28 +192,47 @@ naxsi_zone(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
     }
 
     /* match global zones */
-    if (!strncmp(tmp_ptr, "RAW_BODY", strlen("RAW_BODY"))) {
+    if (!strncmp(tmp_ptr, "ANY", strlen("ANY"))) {
+      return_value_if(has_zone, NGX_CONF_ERROR); // ANY can only be joined with $URL/$URL_X
+      rule->br->any       = 1;
+      rule->br->raw_body  = 1;
+      rule->br->body      = 1;
+      rule->br->body_rule = 1;
+      rule->br->headers   = 1;
+      rule->br->url       = 1;
+      rule->br->args      = 1;
+      rule->br->file_ext  = 1;
+      tmp_ptr += strlen("ANY");
+      is_any   = 1;
+      has_zone = 1;
+      continue;
+    } else if (!strncmp(tmp_ptr, "RAW_BODY", strlen("RAW_BODY"))) {
+      return_value_if(is_any, NGX_CONF_ERROR);
       rule->br->raw_body = 1;
       tmp_ptr += strlen("RAW_BODY");
       has_zone = 1;
       continue;
     } else if (!strncmp(tmp_ptr, "BODY", strlen("BODY"))) {
+      return_value_if(is_any, NGX_CONF_ERROR);
       rule->br->body      = 1;
       rule->br->body_rule = 1;
       tmp_ptr += strlen("BODY");
       has_zone = 1;
       continue;
     } else if (!strncmp(tmp_ptr, "HEADERS", strlen("HEADERS"))) {
+      return_value_if(is_any, NGX_CONF_ERROR);
       rule->br->headers = 1;
       tmp_ptr += strlen("HEADERS");
       has_zone = 1;
       continue;
     } else if (!strncmp(tmp_ptr, "URL", strlen("URL"))) {
+      return_value_if(is_any, NGX_CONF_ERROR);
       rule->br->url = 1;
       tmp_ptr += strlen("URL");
       has_zone = 1;
       continue;
     } else if (!strncmp(tmp_ptr, "ARGS", strlen("ARGS"))) {
+      return_value_if(is_any, NGX_CONF_ERROR);
       rule->br->args = 1;
       tmp_ptr += strlen("ARGS");
       has_zone = 1;
@@ -217,6 +240,7 @@ naxsi_zone(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
     }
     /* match against variable name*/
     else if (!strncmp(tmp_ptr, "NAME", strlen("NAME"))) {
+      return_value_if(is_any, NGX_CONF_ERROR);
       rule->br->target_name = 1;
       tmp_ptr += strlen("NAME");
       has_zone = 1;
@@ -227,6 +251,7 @@ naxsi_zone(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
        FILE_EXT as the rule will be pushed in body rules it'll be
        checked !*/
     else if (!strncmp(tmp_ptr, "FILE_EXT", strlen("FILE_EXT"))) {
+      return_value_if(is_any, NGX_CONF_ERROR);
       rule->br->file_ext = 1;
       rule->br->body     = 1;
       tmp_ptr += strlen("FILE_EXT");
@@ -244,20 +269,24 @@ naxsi_zone(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
         return_value_if(!rule->br->custom_locations, NGX_CONF_ERROR);
       }
 
-      return_value_if(!(custom_rule = ngx_array_push(rule->br->custom_locations)), NGX_CONF_ERROR);
+      return_value_if(NULL == (custom_rule = ngx_array_push(rule->br->custom_locations)),
+                      NGX_CONF_ERROR);
 
       memset(custom_rule, 0, sizeof(ngx_http_custom_rule_location_t));
       if (!strncmp(tmp_ptr, MZ_GET_VAR_T, strlen(MZ_GET_VAR_T))) {
+        return_value_if(is_any, NGX_CONF_ERROR);
         has_zone              = 1;
         custom_rule->args_var = 1;
         rule->br->args_var    = 1;
         tmp_ptr += strlen(MZ_GET_VAR_T);
       } else if (!strncmp(tmp_ptr, MZ_POST_VAR_T, strlen(MZ_POST_VAR_T))) {
+        return_value_if(is_any, NGX_CONF_ERROR);
         has_zone              = 1;
         custom_rule->body_var = 1;
         rule->br->body_var    = 1;
         tmp_ptr += strlen(MZ_POST_VAR_T);
       } else if (!strncmp(tmp_ptr, MZ_HEADER_VAR_T, strlen(MZ_HEADER_VAR_T))) {
+        return_value_if(is_any, NGX_CONF_ERROR);
         has_zone                 = 1;
         custom_rule->headers_var = 1;
         rule->br->headers_var    = 1;
@@ -273,24 +302,28 @@ naxsi_zone(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
       ** Don't do it for whitelists, as its done in a separate manner.
       */
       else if (!strncmp(tmp_ptr, MZ_GET_VAR_X, strlen(MZ_GET_VAR_X))) {
+        return_value_if(is_any, NGX_CONF_ERROR);
         has_zone              = 1;
         custom_rule->args_var = 1;
         rule->br->args_var    = 1;
         rule->br->rx_mz       = 1;
         tmp_ptr += strlen(MZ_GET_VAR_X);
       } else if (!strncmp(tmp_ptr, MZ_POST_VAR_X, strlen(MZ_POST_VAR_X))) {
+        return_value_if(is_any, NGX_CONF_ERROR);
         has_zone              = 1;
         rule->br->rx_mz       = 1;
         custom_rule->body_var = 1;
         rule->br->body_var    = 1;
         tmp_ptr += strlen(MZ_POST_VAR_X);
       } else if (!strncmp(tmp_ptr, MZ_HEADER_VAR_X, strlen(MZ_HEADER_VAR_X))) {
+        return_value_if(is_any, NGX_CONF_ERROR);
         has_zone                 = 1;
         custom_rule->headers_var = 1;
         rule->br->headers_var    = 1;
         rule->br->rx_mz          = 1;
         tmp_ptr += strlen(MZ_HEADER_VAR_X);
       } else if (!strncmp(tmp_ptr, MZ_SPECIFIC_URL_X, strlen(MZ_SPECIFIC_URL_X))) {
+        return_value_if(is_any, NGX_CONF_ERROR);
         custom_rule->specific_url = 1;
         rule->br->rx_mz           = 1;
         tmp_ptr += strlen(MZ_SPECIFIC_URL_X);
@@ -361,13 +394,13 @@ void*
 naxsi_str(ngx_conf_t* r, ngx_str_t* tmp, ngx_http_rule_t* rule)
 {
   ngx_str_t* str;
-  uint       i;
+  ngx_uint_t i;
 
   return_value_if(!rule->br, NGX_CONF_ERROR);
 
   rule->br->match_type = STR;
 
-  return_value_if(!(str = ngx_pcalloc(r->pool, sizeof(ngx_str_t))), NGX_CONF_ERROR);
+  return_value_if(NULL == (str = ngx_pcalloc(r->pool, sizeof(ngx_str_t))), NGX_CONF_ERROR);
 
   str->data = tmp->data + strlen(STR_T);
   str->len  = tmp->len - strlen(STR_T);

@@ -104,7 +104,7 @@ For example,
 more_set_headers -t 'text/html text/plain' 'X-Foo: Bar';
 ```
 
-Never use other paramemters like `charset=utf-8` in the `-t` option values; they will not
+Never use other parameters like `charset=utf-8` in the `-t` option values; they will not
 work as you would expect.
 
 Input headers can be modified as well. For example
@@ -347,13 +347,13 @@ Installation
 ============
 
 Grab the nginx source code from [nginx.org](http://nginx.org/), for example,
-the version 1.13.6 (see [nginx compatibility](#compatibility)), and then build the source with this module:
+the version 1.17.8 (see [nginx compatibility](#compatibility)), and then build the source with this module:
 
 ```bash
 
- wget 'http://nginx.org/download/nginx-1.13.6.tar.gz'
- tar -xzvf nginx-1.13.6.tar.gz
- cd nginx-1.13.6/
+ wget 'http://nginx.org/download/nginx-1.17.8.tar.gz'
+ tar -xzvf nginx-1.17.8.tar.gz
+ cd nginx-1.17.8/
 
  # Here we assume you would install you nginx under /opt/nginx/.
  ./configure --prefix=/opt/nginx \
@@ -382,6 +382,12 @@ Compatibility
 
 The following versions of Nginx should work with this module:
 
+* **1.21.x**                      (last tested: 1.21.4)
+* **1.19.x**                      (last tested: 1.19.9)
+* **1.17.x**                      (last tested: 1.17.8)
+* **1.16.x**
+* **1.15.x**                      (last tested: 1.15.8)
+* **1.14.x**
 * **1.13.x**                      (last tested: 1.13.6)
 * **1.12.x**
 * **1.11.x**                      (last tested: 1.11.2)

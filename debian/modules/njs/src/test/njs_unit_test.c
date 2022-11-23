@@ -203,10 +203,8 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var func = function f() {let f = null; return f;}; func()"),
       njs_str("null") },
 
-#if 0 /* TODO */
     { njs_str("var a; Object.getOwnPropertyDescriptor(this, 'a').value"),
       njs_str("undefined") },
-#endif
 
     { njs_str("f() = 1"),
       njs_str("ReferenceError: Invalid left-hand side in assignment in 1") },
@@ -1928,10 +1926,8 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var Infinity"),
       njs_str("undefined") },
 
-#if 0 /* ES5FIX */
     { njs_str("Infinity = 1"),
-      njs_str("TypeError: Cannot assign to read-only property "Infinity" of object") },
-#endif
+      njs_str("TypeError: Cannot assign to read-only property \"Infinity\" of object") },
 
     /**/
 
@@ -1962,10 +1958,8 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var NaN"),
       njs_str("undefined") },
 
-#if 0 /* ES5FIX */
     { njs_str("NaN = 1"),
-      njs_str("TypeError: Cannot assign to read-only property "NaN" of object") },
-#endif
+      njs_str("TypeError: Cannot assign to read-only property \"NaN\" of object") },
 
     /**/
 
@@ -2906,6 +2900,77 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var a = []; for (var k in new Uint8Array([1,2,3])) { a.push(k); }; a"),
       njs_str("0,1,2") },
 
+    { njs_str("var i=0, a=[], r=[], d=[3,5];"
+              "function ret_a() {r.push('ret_a'); return a};"
+              "function ret_d() {r.push('ret_d'); return d};"
+              "for (ret_a()[i++] in 0 || ret_d()) {d[2]=22; r.push(a)}; r"),
+      njs_str("ret_d,ret_a,0,1,ret_a,0,1") },
+
+    { njs_str("this.a = 0; for (a in {b:1}) {}; a;"),
+      njs_str("b") },
+
+    { njs_str("for (var x = x in [1,2]; ; ) {break};"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop in 1") },
+
+    { njs_str("for (x = x in [1,2]; ; ) {break};"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop in 1") },
+
+    { njs_str("for (var x = (x in [1,2]); ; ) {break}; x;"),
+      njs_str("false") },
+
+    { njs_str("var x; for (x = (x in [1,2]); ; ) {break}; x;"),
+      njs_str("false") },
+
+    { njs_str("for (++a in {}; ; ) {break}"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop in 1") },
+
+    { njs_str("var a, b, c, d = 1; for (a + b, c = d; ; ){break}; c"),
+      njs_str("1") },
+
+    { njs_str("var x = 1, y, z = 'a', u = {a:1};"
+              "for (var a = x, y = z in u; ; ) {break}; y"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop in 1") },
+
+    { njs_str("var x = 1, y, z = 'a', u = {a:1};"
+              "for (var a = x, y= (z in u) ; ; ) {break}; y"),
+      njs_str("true") },
+
+    { njs_str("var a = 0; for (++a; ; ) {break}; a"),
+      njs_str("1") },
+
+    { njs_str("var a = 0; for (a++; ; ) {break}; a"),
+      njs_str("1") },
+
+    { njs_str("var a = 0; for (+a; ; ) {break}; a"),
+      njs_str("0") },
+
+    { njs_str("for (in + j;;) {}"),
+      njs_str("SyntaxError: Unexpected token \"in\" in 1") },
+
+    { njs_str("for (true ? 0 in {}: 0; false; ) ;"),
+      njs_str("undefined") },
+
+    { njs_str("for (true ? 0 : 0 in {}; false; ) ;"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop in 1") },
+
+    { njs_str("for ((a in b)) {}"),
+      njs_str("SyntaxError: Unexpected token \")\" in 1") },
+
+    { njs_str("var a='a', b={b:1}; for ((a in b); ; ) {break}; a"),
+      njs_str("a") },
+
+    { njs_str("for ((a,b,c) => {};;) {break}"),
+      njs_str("undefined") },
+
+    { njs_str("for(I in``[)8"),
+      njs_str("SyntaxError: Unexpected token \")\" in 1") },
+
+    { njs_str("for(9A=>>"),
+      njs_str("SyntaxError: Unexpected token \"A\" in 1") },
+
+    { njs_str("for(A?{,"),
+      njs_str("SyntaxError: Unexpected token \",\" in 1") },
+
     /* switch. */
 
     { njs_str("switch"),
@@ -3165,6 +3230,9 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("a:\n\n1"),
       njs_str("1") },
 
+    { njs_str("a:;"),
+      njs_str("undefined") },
+
     { njs_str("a:\n\n"),
       njs_str("SyntaxError: Unexpected end of input in 3") },
 
@@ -3193,6 +3261,12 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("a:{1; break a}"),
       njs_str("1") },
 #endif
+
+    { njs_str("var r='ok'; a:if(1){break a; r='!ok'}; r"),
+      njs_str("ok") },
+
+    { njs_str("var r='ok'; a:if(0){break a; r='!ok1'} else {break a; r='!ok2'}; r"),
+      njs_str("ok") },
 
     { njs_str("var a = 0; a:{a++}; a"),
       njs_str("1") },
@@ -3462,7 +3536,7 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("function f() { Object.prototype.toString = 1; };"
               "Object.prototype.toString = f;"
               "(function () { try { 's'[{}](); } catch (e) { throw e; } })()"),
-      njs_str("TypeError: Cannot convert object to primitive value") },
+      njs_str("TypeError: (intermediate value)[\"undefined\"] is not a function") },
 
     { njs_str("var i; for (i = 0; i < 10; i++) { i += 1 } i"),
       njs_str("10") },
@@ -3567,10 +3641,8 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("null = 1"),
       njs_str("ReferenceError: Invalid left-hand side in assignment in 1") },
 
-#if 0 /* ES5FIX */
     { njs_str("undefined = 1"),
-      njs_str("TypeError: Cannot assign to read-only property "undefined" of object") },
-#endif
+      njs_str("TypeError: Cannot assign to read-only property \"undefined\" of object") },
 
     { njs_str("null++"),
       njs_str("ReferenceError: Invalid left-hand side in postfix operation in 1") },
@@ -3647,11 +3719,41 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var a = 1; var b = { x:2 }; a = b.x += (a = 1)"),
       njs_str("3") },
 
+    { njs_str("var o = {true:1}; o[true] += 1; o.true"),
+      njs_str("2") },
+
+    { njs_str("var o = {false:1}; o[false] += 1; o.false"),
+      njs_str("2") },
+
+    { njs_str("var o = {undefined:1}; o[undefined] += 1; o.undefined"),
+      njs_str("2") },
+
+    { njs_str("var o = {'5':1}; o[5] += 1; o[5]"),
+      njs_str("2") },
+
+    { njs_str("var o = {a:1}; o[{toString:()=>'a'}] += 1; o.a"),
+      njs_str("2") },
+
+    { njs_str("var o = {true:1}; o[true]++; o.true"),
+      njs_str("2") },
+
+    { njs_str("var o = {false:1}; o[false]++; o.false"),
+      njs_str("2") },
+
+    { njs_str("var o = {undefined:1}; o[undefined]++; o.undefined"),
+      njs_str("2") },
+
+    { njs_str("var o = {'5':1}; o[5]++; o[5]"),
+      njs_str("2") },
+
+    { njs_str("var o = {a:1}; o[{toString:()=>'a'}]++; o.a"),
+      njs_str("2") },
+
     { njs_str("var a = undefined; a.b++; a.b"),
       njs_str("TypeError: cannot get property \"b\" of undefined") },
 
     { njs_str("var a = null; a.b++; a.b"),
-      njs_str("TypeError: cannot get property \"b\" of undefined") },
+      njs_str("TypeError: cannot get property \"b\" of null") },
 
     { njs_str("var a = true; a.b++; a.b"),
       njs_str("TypeError: property set on primitive boolean type") },
@@ -3816,6 +3918,24 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("({[{toString(){return {}}}]:1})"),
       njs_str("TypeError: Cannot convert object to primitive value") },
 
+    { njs_str("({['a' + 'v'](){}}).av.name"),
+      njs_str("av") },
+
+    { njs_str("({[Symbol.toStringTag](){}})[Symbol.toStringTag].name"),
+      njs_str("[Symbol.toStringTag]") },
+
+    { njs_str("var anonSym = Symbol(); ({[anonSym]: () => {}})[anonSym].name"),
+      njs_str("") },
+
+    { njs_str("var named = Symbol('xxx'); ({[named]: () => {}})[named].name"),
+      njs_str("[xxx]") },
+
+    { njs_str("var called = false;"
+             "({"
+             "   [{toString(){ if (called) throw 'OOps'; called = true; return 'a'}}](){}"
+             "}).a.name"),
+      njs_str("a") },
+
     { njs_str("var o = { [new Number(12345)]: 1000 }; o[12345]"),
       njs_str("1000") },
 
@@ -3883,8 +4003,8 @@ static njs_unit_test_t  njs_test[] =
                  "[f.length, delete f.length, f.length, delete f.length]"),
       njs_str("2,true,0,true") },
 
-    { njs_str("njs.dump({break:1,3:2,'a':4,\"b\":2,true:1,null:0})"),
-      njs_str("{break:1,3:2,a:4,b:2,true:1,null:0}") },
+    { njs_str("njs.dump({break:1,3:2,'a':4,\"b\":2,true:1,null:0,async:2})"),
+      njs_str("{break:1,3:2,a:4,b:2,true:1,null:0,async:2}") },
 
     { njs_str("var o1 = {a:1,b:2}, o2 = {c:3}; o1.a + o2.c"),
       njs_str("4") },
@@ -4409,6 +4529,23 @@ static njs_unit_test_t  njs_test[] =
                  "var a = [1,2]; a[1.5] = 5; '' + (n in a) + (delete a[n])"),
       njs_str("truetrue") },
 
+    { njs_str("var o = {},  v = o;"
+              "v[{toString: () => { v = 'V'; return 'a';}}] = 1;"
+              "[v, o.a]"),
+      njs_str("V,1") },
+
+    { njs_str("var o = null; o[{toString:()=>{throw 'OOps'}}]"),
+      njs_str("TypeError: cannot get property \"[object Object]\" of null") },
+
+    { njs_str("var o = null; o[{toString:()=>{throw 'OOps'}}]()"),
+      njs_str("TypeError: cannot get property \"[object Object]\" of null") },
+
+    { njs_str("var o = null; o[{toString:()=>{throw 'OOps'}}] = 1"),
+      njs_str("TypeError: cannot set property \"[object Object]\" of null") },
+
+    { njs_str("var o = null; o[{toString:()=>{throw 'OOps'}}] += 1"),
+      njs_str("TypeError: cannot get property \"[object Object]\" of null") },
+
     /**/
 
     { njs_str("Array.isArray()"),
@@ -4454,6 +4591,14 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var a = []; Object.defineProperty(a, 'length', {writable:0});"
               "Object.defineProperty(a, 'length', {writable:true})"),
       njs_str("TypeError: Cannot redefine property: \"length\"") },
+
+    { njs_str("var a = [0,1]; Object.defineProperty(a, 'length', {writable: false}); "
+              "Object.defineProperty(a, 'length', {value:12})"),
+      njs_str("TypeError: Cannot redefine property: \"length\"") },
+
+    { njs_str("var a = [0,1]; Object.defineProperty(a, 'length', {writable: false}); "
+              "Object.defineProperty(a, 'length', {value:2}); a.length"),
+      njs_str("2") },
 
     { njs_str ("var a =[0,1,2]; Object.defineProperty(a, 100, {value:100});"
               "njs.dump(a);"),
@@ -4651,6 +4796,17 @@ static njs_unit_test_t  njs_test[] =
               "a[a.length - 1] = 'z'; a[a.length -2] = 'y';"
               "Array.prototype.pop.call(a); [a.length, a[a.length - 1]]"),
       njs_str("15,y") },
+
+    { njs_str("var a = new Array(1), arrayPrototypeGet0Calls = 0;"
+              "Object.defineProperty(Array.prototype, '0', {"
+              "    get() { Object.defineProperty(a, 'length', {writable: false});"
+              "            arrayPrototypeGet0Calls++;"
+              "    },"
+              "});"
+              "var e = null;"
+              "try { a.pop(); } catch (ee) { e = ee.name };"
+              "[e, a.length, arrayPrototypeGet0Calls]"),
+      njs_str("TypeError,1,1") },
 
     { njs_str("[0,1].slice()"),
       njs_str("0,1") },
@@ -4894,6 +5050,27 @@ static njs_unit_test_t  njs_test[] =
               "            return a.splice.apply(a, args);})"
               ".map(v=>v.join(''))"),
       njs_str(",1345,,1,13,13,13") },
+
+    { njs_str("var a = ['x'];"
+              "var d = a.splice(0, { valueOf() {  a.length = 0; return 10; } });"
+              "njs.dump(d)"),
+      njs_str("[<empty>]") },
+
+    { njs_str("var a = ['a', 'b', 'c'];"
+              "var d = a.splice(0, { valueOf() {  a.length = 2; return 3; } });"
+              "njs.dump(d)"),
+      njs_str("['a','b',<empty>]") },
+
+#if NJS_HAVE_LARGE_STACK
+    { njs_str("let arr = [ 'x' ];"
+              "let a = { toString() {"
+               "          new Float64Array(100).set(["
+               "            {toString() {Array.prototype.splice.call(arr, a)}}"
+               "          ])"
+               "        }};"
+               "a.toString()"),
+      njs_str("RangeError: Maximum call stack size exceeded") },
+#endif
 
     { njs_str("var o = { toString: () => {"
               "             for (var i = 0; i < 0x10; i++) {a.push(1)};"
@@ -5482,6 +5659,15 @@ static njs_unit_test_t  njs_test[] =
                  "Object.defineProperty(o, '0', {set: function(v){this.a = 2 * v}});"
                  "Array.prototype.fill.call(o, 2).a"),
       njs_str("4") },
+
+    { njs_str("var a = (new Array(2**10)).fill(0);"
+              "var start = {valueOf() {"
+              "                 var len = a.length - 2;"
+              "                 for (var i = 0; i < len; i++) { a.shift(); }; "
+              "                 return 0;"
+              "            }};"
+              "a.fill('xxx', start)"),
+      njs_str("xxx,xxx") },
 
     { njs_str("Array.prototype.fill.call(new Int32Array(1))"),
       njs_str("0") },
@@ -6510,6 +6696,15 @@ static njs_unit_test_t  njs_test[] =
               "           return a.toString() === '1,2,3,3'})"),
       njs_str("true") },
 
+    { njs_str(NJS_TYPED_ARRAY_LIST
+              ".every(v=>{ var a = [];"
+              "            var b = {toString() {a.length = 65535; return 99;}};"
+              "            for (var c = 0; c < 3; c++) { a[c] = b; }"
+              "            var ta = new v(6); ta.set(a);"
+              "            return ta.toString() == '99,99,99,0,0,0';"
+              "          })"),
+      njs_str("true") },
+
     { njs_str("(new Float32Array([255,255,NaN,3,NaN,Infinity,3,-Infinity,0,-0,2,1,-5])).slice(2).sort()"),
       njs_str("-Infinity,-5,0,0,1,2,3,3,Infinity,NaN,NaN") },
 
@@ -7341,6 +7536,11 @@ static njs_unit_test_t  njs_test[] =
                  "[a.length, a[33], a[34]]"),
       njs_str("35,a,�") },
 
+    /* Spaces: U+0009U+000BU+000CU+0020U+00A0U+000AU+000DU+2028U+2029 */
+
+    { njs_str("\x09\x0a\x0b\x0c\x0d \xc2\xa0'a'\xe2\x80\xa8+\xe2\x80\xa9'b'"),
+      njs_str("ab") },
+
     /* Escape strings. */
 
     { njs_str("'\\a \\' \\\" \\\\ \\0 \\b \\f \\n \\r \\t \\v'"),
@@ -7688,6 +7888,10 @@ static njs_unit_test_t  njs_test[] =
                  "var o = { toString: f }; o"),
       njs_str("0,1,2") },
 
+    { njs_str("var f = function F() {};"
+              "[f.name, f.bind().name, f.bind().bind().name]"),
+      njs_str("F,bound F,bound bound F") },
+
     { njs_str("var f = Object.defineProperty(function() {}, 'name', {value: 'F'});"
               "[f.name, f.bind().name, f.bind().bind().name]"),
       njs_str("F,bound F,bound bound F") },
@@ -7744,12 +7948,22 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var bArray = Array.bind(null, 10); new bArray(16)"),
       njs_str("10,16") },
 
-#if 0 /* FIXME: refactor Bound calls (9.4.1.1[[Call]]). */
     { njs_str("function f(x,y) {return {args:arguments,length:arguments.length}};"
-              "var bf = f.bind({}, 'a'); var bbf = bf.bind({},'b'); var o = bbf('c');"),
-              "[o.args[0], o.args[2], o.length]"
+              "var bf = f.bind({}, 'a'); var bbf = bf.bind({},'b'); var o = bbf('c');"
+              "[o.args[0], o.args[2], o.length]"),
       njs_str("a,c,3") },
-#endif
+
+    { njs_str("var f = function (a, b) {return [this, a, b]};"
+              "var b1 = f.bind('THIS', 'x');"
+              "var b2 = b1.bind('WAKA', 'y');"
+              "njs.dump([f(2,3), b1(3), b2()])"),
+      njs_str("[[undefined,2,3],['THIS','x',3],['THIS','x','y']]") },
+
+    { njs_str("var f = Math.max;"
+              "var b1 = f.bind('THIS', 4);"
+              "var b2 = b1.bind('WAKA', 5);"
+              "njs.dump([f(2,3), b1(3), b2()])"),
+      njs_str("[3,4,5]") },
 
     { njs_str("var s = { toString: function() { return '123' } };"
                  "var a = 'abc'; a.concat('абв', s)"),
@@ -8852,6 +9066,35 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("String.bytesFrom([255,149,15,97,95]).replace(/_/g, 'X')[4]"),
       njs_str("X") },
 
+    { njs_str("var a = [];"
+              "a[2] = '';"
+              "var re = /any_regexp/;"
+              "re.exec = function () {"
+              "    return a;"
+              "};"
+              "var r = 'any_string'.replace(re);"),
+      njs_str("undefined") },
+
+    { njs_str("var a = [];"
+              "a[2] = {toString() {a[2**20] = 1; return 'X';}}; "
+              "a[4] = 'Y';"
+              "a[99] = 'Z';"
+              "a[100] = '*';"
+              "a[200] = '!';"
+              "var re = /b/;"
+              "re.exec = () => a;"
+              "'abc'.replace(re, '@$1|$2|$3|$4|$99|$100|@')"),
+      njs_str("@|X||Y|Z|0|@") },
+
+    { njs_str("var a = [];"
+              "Object.defineProperty(a, 32768, {});"
+              "var re = /any_regexp/;"
+              "re.exec = function () {"
+              "    return a;"
+              "};"
+              "var r = 'any_string'.replace(re);"),
+      njs_str("undefined") },
+
     { njs_str("/=/"),
       njs_str("/=/") },
 
@@ -9895,6 +10138,53 @@ static njs_unit_test_t  njs_test[] =
               "Object.defineProperty(f, 'length', {value: 42});"
               "f.length"),
       njs_str("42") },
+
+    { njs_str("function f(){}; f.name"),
+      njs_str("f") },
+
+    { njs_str("function f(){}; njs.dump(Object.getOwnPropertyDescriptor(f, 'name'))"),
+      njs_str("{value:'f',writable:false,enumerable:false,configurable:true}") },
+
+    { njs_str("function f(){}; Object.defineProperty(f, 'name', {value: 'F'}); f.name"),
+      njs_str("F") },
+
+    { njs_str("function f(){}; Object.defineProperty(f, 'name', {value: 'F'});"
+              "njs.dump(Object.getOwnPropertyDescriptor(f, 'name'))"),
+      njs_str("{value:'F',writable:false,enumerable:false,configurable:true}") },
+
+    { njs_str("function f() {}; f.name = 'a'"),
+      njs_str("TypeError: Cannot assign to read-only property \"name\" of function") },
+
+    { njs_str("(function f () { return f.name})()"),
+      njs_str("f") },
+
+    { njs_str("var a = function () {}; a.name"),
+      njs_str("a") },
+
+    { njs_str("(function () {}).name"),
+      njs_str("") },
+
+    { njs_str("var a = (null, function () {}); a.name"),
+      njs_str("") },
+
+    { njs_str("var a = async function () {}; a.name"),
+      njs_str("a") },
+
+    { njs_str("let a = () => {}; a.name"),
+      njs_str("a") },
+
+    { njs_str("let a = async () => {}; a.name"),
+      njs_str("a") },
+
+    { njs_str("Function().name"),
+      njs_str("anonymous") },
+
+    { njs_str("var o = {f: function (){}, g: () => {}, h: async function(){}};"
+              "[o.f.name, o.g.name, o.h.name]"),
+      njs_str("f,g,h") },
+
+    { njs_str("({t(){}}).t.name"),
+      njs_str("t") },
 
     /* Function nesting depth. */
 
@@ -12262,7 +12552,7 @@ static njs_unit_test_t  njs_test[] =
       njs_str("TypeError: Cyclic __proto__ value") },
 
     { njs_str("Object.prototype.__proto__.f()"),
-      njs_str("TypeError: cannot get property \"f\" of undefined") },
+      njs_str("TypeError: cannot get property \"f\" of null") },
 
     { njs_str("var obj = Object.create(null); obj.one = 1;"
                  "var res = [];"
@@ -13756,6 +14046,9 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("Object.values(process)"),
       njs_str("") },
 
+    { njs_str("Object.keys(process.env).sort()"),
+      njs_str("DUP,TZ") },
+
     { njs_str("Object.values()"),
       njs_str("TypeError: cannot convert undefined argument to object") },
 
@@ -13830,6 +14123,10 @@ static njs_unit_test_t  njs_test[] =
                  "Object.values(o)"),
       njs_str("1,3,2") },
 
+    { njs_str("var o = { a: 'A', get b() { this.c = 'C'; return 'B'; } };"
+              "Object.values(o).length"),
+      njs_str("2") },
+
     { njs_str("var o = {a:1, c:2}; Object.defineProperty(o, 'b', {});"
                  "Object.entries(o)"),
       njs_str("a,1,c,2") },
@@ -13843,6 +14140,10 @@ static njs_unit_test_t  njs_test[] =
                  "Object.defineProperty(o, 'b', {enumerable:true, value:2});"
                  "Object.entries(o)"),
       njs_str("a,1,c,3,b,2") },
+
+    { njs_str("var o = { a: 'A', get b() { this.c = 'C'; return 'B'; } };"
+              "Object.entries(o).length"),
+      njs_str("2") },
 
     { njs_str("var o = {}; Object.defineProperty(o, 'a', {}); o.a = 1"),
       njs_str("TypeError: Cannot assign to read-only property \"a\" of object") },
@@ -14437,6 +14738,10 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var o = { get get() { return 'bar'; } }; o.get"),
       njs_str("bar") },
 
+    { njs_str("var d = Object.getOwnPropertyDescriptor({ get a() { return 'bar'; } }, 'a');"
+              "d.hasOwnProperty('set')"),
+      njs_str("true") },
+
     { njs_str("var o = { get() { return 'bar'; } }; o.get()"),
       njs_str("bar") },
 
@@ -14725,7 +15030,7 @@ static njs_unit_test_t  njs_test[] =
       njs_str("a,b") },
 
     { njs_str("Object.getOwnPropertyNames(Object.defineProperty([], 'b', {}))"),
-      njs_str("length,b") },
+      njs_str("b,length") },
 
     { njs_str("Object.getOwnPropertyNames(Object.defineProperty(new String(), 'b', {}))"),
       njs_str("b,length") },
@@ -14737,7 +15042,7 @@ static njs_unit_test_t  njs_test[] =
       njs_str("0,1,2,length") },
 
     { njs_str("Object.getOwnPropertyNames(function() {})"),
-      njs_str("length,prototype") },
+      njs_str("length,name,prototype") },
 
     { njs_str("Object.getOwnPropertyNames(Array)"),
       njs_str("name,length,prototype,isArray,of") },
@@ -14807,6 +15112,10 @@ static njs_unit_test_t  njs_test[] =
 
     { njs_str("Object.defineProperty([1,2], 'a', {value:1}).a"),
       njs_str("1") },
+
+    { njs_str("var a = []; a[0] = 101; Object.defineProperty(a, 0, {});"
+              "a[0]"),
+      njs_str("101") },
 
     { njs_str("var a = Object.freeze([1,2]);"
                  "Object.defineProperty(a, 'a', {value:1}).a"),
@@ -18107,6 +18416,22 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("njs.on('exit', ()=>{}); 1"),
       njs_str("1") },
 
+    /* njs.memoryStats. */
+
+    { njs_str("Object.keys(njs.memoryStats).sort()"),
+      njs_str("cluster_size,nblocks,page_size,size") },
+
+    { njs_str("typeof njs.memoryStats.size"),
+      njs_str("number") },
+
+    { njs_str("njs.memoryStats.size > 4096"),
+      njs_str("true") },
+
+    { njs_str("var size = njs.memoryStats.size;"
+              "new Array(2**15);"
+              "njs.memoryStats.size > size"),
+      njs_str("true") },
+
     /* Built-in methods name. */
 
     { njs_str(
@@ -18229,15 +18554,6 @@ static njs_unit_test_t  njs_test[] =
 
     { njs_str("import x from ''"),
       njs_str("SyntaxError: Cannot find module \"\" in 1") },
-
-    { njs_str("import x from 'crypto'"),
-      njs_str("undefined") },
-
-    { njs_str("import x from 'crypto' 1"),
-      njs_str("SyntaxError: Unexpected token \"1\" in 1") },
-
-    { njs_str("if (1) {import x from 'crypto'}"),
-      njs_str("SyntaxError: Illegal import statement in 1") },
 
     { njs_str("export"),
       njs_str("SyntaxError: Illegal export statement in 1") },
@@ -19584,6 +19900,15 @@ static njs_unit_test_t  njs_fs_module_test[] =
 
 static njs_unit_test_t  njs_crypto_module_test[] =
 {
+    { njs_str("import x from 'crypto'"),
+      njs_str("undefined") },
+
+    { njs_str("import x from 'crypto' 1"),
+      njs_str("SyntaxError: Unexpected token \"1\" in 1") },
+
+    { njs_str("if (1) {import x from 'crypto'}"),
+      njs_str("SyntaxError: Illegal import statement in 1") },
+
     { njs_str("var h = require('crypto').createHash('sha1');"
               "[Object.prototype.toString.call(h), njs.dump(h),h]"),
       njs_str("[object Hash],Hash {},[object Hash]") },
@@ -21172,6 +21497,10 @@ static njs_unit_test_t  njs_module_test[] =
 
     { njs_str("{ var f = 1; } function f() {};"),
       njs_str("SyntaxError: \"f\" has already been declared in 1") },
+
+    { njs_str("function f(v) {var f = v;}; f(1); f"),
+      njs_str("[object Function]") },
+
 };
 
 
@@ -22042,6 +22371,15 @@ static njs_unit_test_t  njs_backtraces_test[] =
       njs_str("TypeError: Cannot convert object to primitive value\n"
               "    at Math.max (native)\n"
               "    at main (:1)\n") },
+
+#ifdef NJS_TEST262
+    { njs_str("var ab = new ArrayBuffer(1);"
+              "$262.detachArrayBuffer(ab);"
+              "ab.byteLength"),
+      njs_str("TypeError: detached buffer\n"
+              "    at ArrayBuffer.prototype.byteLength (native)\n"
+              "    at main (:1)\n") },
+#endif
 
     { njs_str("Object.prototype()"),
       njs_str("TypeError: (intermediate value)[\"prototype\"] is not a function\n"
@@ -22995,7 +23333,7 @@ njs_vm_value_test(njs_unit_test_t unused[], size_t num, njs_str_t *name,
 
     for (i = 0; i < njs_nitems(tests); i++) {
 
-        memset(&options, 0, sizeof(njs_vm_opt_t));
+        njs_vm_opt_init(&options);
         options.init = 1;
 
         vm = njs_vm_create(&options);
@@ -24039,8 +24377,13 @@ main(int argc, char **argv)
         return (ret == NJS_DONE) ? EXIT_SUCCESS: EXIT_FAILURE;
     }
 
+    environ = NULL;
+
     (void) putenv((char *) "TZ=UTC");
     tzset();
+
+    (void) putenv((char *) "DUP=bar");
+    (void) putenv((char *) "dup=foo");
 
     njs_mm_denormals(1);
 

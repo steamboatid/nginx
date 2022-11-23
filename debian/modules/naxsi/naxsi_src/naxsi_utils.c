@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2016-2019, Thibault 'bui' Koechlin <tko@nbs-system.com>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include <naxsi.h>
-#include <naxsi_net.h>
+#include <ngx_config.h>
 
-static int
-naxsi_unescape_uri(u_char** dst, u_char** src, size_t size, ngx_uint_t type);
+#include <naxsi.h>
+#include <naxsi_macros.h>
+#include <naxsi_net.h>
 
 char*
 strnchr(const char* s, int c, int len)
@@ -84,32 +84,6 @@ naxsi_escape_nullbytes(ngx_str_t* str)
     }
   }
   return nullbytes;
-}
-
-/*
-   unescape routine returns a sum of :
- - number of nullbytes present
- - number of invalid url-encoded characters
-*/
-int
-naxsi_unescape(ngx_str_t* str)
-{
-  u_char *dst, *src;
-  u_int   nullbytes = 0, bad = 0, i;
-
-  dst = str->data;
-  src = str->data;
-
-  bad      = naxsi_unescape_uri(&src, &dst, str->len, 0);
-  str->len = src - str->data;
-  // tmp hack fix, avoid %00 & co (null byte) encoding :p
-  for (i = 0; i < str->len; i++) {
-    if (str->data[i] == 0x0) {
-      nullbytes++;
-      str->data[i] = '0';
-    }
-  }
-  return (nullbytes + bad);
 }
 
 /*
@@ -211,6 +185,32 @@ naxsi_unescape_uri(u_char** dst, u_char** src, size_t size, ngx_uint_t type)
   return (bad);
 }
 
+/*
+   unescape routine returns a sum of :
+ - number of nullbytes present
+ - number of invalid url-encoded characters
+*/
+int
+naxsi_unescape(ngx_str_t* str)
+{
+  u_char *dst, *src;
+  u_int   nullbytes = 0, bad = 0, i;
+
+  dst = str->data;
+  src = str->data;
+
+  bad      = naxsi_unescape_uri(&src, &dst, str->len, 0);
+  str->len = src - str->data;
+  // tmp hack fix, avoid %00 & co (null byte) encoding :p
+  for (i = 0; i < str->len; i++) {
+    if (str->data[i] == 0x0) {
+      nullbytes++;
+      str->data[i] = '0';
+    }
+  }
+  return (nullbytes + bad);
+}
+
 /* push rule into disabled rules. */
 static ngx_int_t
 ngx_http_wlr_push_disabled(ngx_conf_t* cf, ngx_http_naxsi_loc_conf_t* dlc, ngx_http_rule_t* curr)
@@ -233,22 +233,33 @@ ngx_http_wlr_push_disabled(ngx_conf_t* cf, ngx_http_naxsi_loc_conf_t* dlc, ngx_h
 static ngx_int_t
 ngx_http_wlr_merge(ngx_conf_t* cf, ngx_http_whitelist_rule_t* father_wl, ngx_http_rule_t* curr)
 {
-  uint       i;
+  ngx_uint_t i;
   ngx_int_t* tmp_ptr;
 
-  NX_LOG_DEBUG(_debug_whitelist, NGX_LOG_EMERG, cf, 0, "[naxsi] merging similar wl(s)");
-
+  NX_LOG_DEBUG(_debug_whitelist,
+               NGX_LOG_EMERG,
+               cf,
+               0,
+               "[naxsi] %s wl(s)",
+               father_wl->ids ? "merging similar" : "adding");
   if (!father_wl->ids) {
     father_wl->ids = ngx_array_create(cf->pool, 3, sizeof(ngx_int_t));
-    if (!father_wl->ids)
+    if (!father_wl->ids) {
       return (NGX_ERROR);
+    }
   }
+
+  if (curr->wlid_array->nelts < 1) {
+    return (NGX_ERROR);
+  }
+
+  ngx_int_t* wl_ids = (ngx_int_t*)curr->wlid_array->elts;
   for (i = 0; i < curr->wlid_array->nelts; i++) {
     tmp_ptr = ngx_array_push(father_wl->ids);
-    if (!tmp_ptr)
+    if (!tmp_ptr) {
       return (NGX_ERROR);
-    *tmp_ptr = ((ngx_int_t*)curr->wlid_array->elts)[i];
-    //*tmp_ptr = curr->wlid_array->elts[i];
+    }
+    *tmp_ptr = wl_ids[i];
   }
   return (NGX_OK);
 }
@@ -266,49 +277,49 @@ ngx_http_wlr_identify(ngx_conf_t*                cf,
                       int*                       name_idx)
 {
 
-  uint i;
+  ngx_uint_t i;
 
   /*
     identify global match zones (|ARGS|BODY|HEADERS|URL|FILE_EXT)
    */
-  if (curr->br->body || curr->br->body_var)
+  if (curr->br->any) {
+    *zone = ANY;
+  } else if (curr->br->body || curr->br->body_var) {
     *zone = BODY;
-  else if (curr->br->headers || curr->br->headers_var)
+  } else if (curr->br->headers || curr->br->headers_var) {
     *zone = HEADERS;
-  else if (curr->br->args || curr->br->args_var)
+  } else if (curr->br->args || curr->br->args_var) {
     *zone = ARGS;
-  else if (curr->br->url) /*don't assume that named $URL means zone is URL.*/
+  } else if (curr->br->url) { /*don't assume that named $URL means zone is URL.*/
     *zone = URL;
-  else if (curr->br->file_ext)
+  } else if (curr->br->file_ext) {
     *zone = FILE_EXT;
+  }
   /*
     if we're facing a WL in the style $URL:/bla|ARGS (or any other zone),
     push it to
    */
   for (i = 0; i < curr->br->custom_locations->nelts; i++) {
+    ngx_http_custom_rule_location_t* loc = custloc_array(curr->br->custom_locations->elts);
     /*
       locate target URL if exists ($URL:/bla|ARGS) or ($URL:/bla|$ARGS_VAR:foo)
      */
-    if (custloc_array(curr->br->custom_locations->elts)[i].specific_url) {
-      NX_LOG_DEBUG(_debug_whitelist_heavy,
-                   NGX_LOG_EMERG,
-                   cf,
-                   0,
-                   "whitelist has URI %V",
-                   &(custloc_array(curr->br->custom_locations->elts)[i].target));
+    if (loc[i].specific_url) {
+      NX_LOG_DEBUG(
+        _debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist has URI %V", &(loc[i].target));
 
       *uri_idx = i;
     }
     /*
       identify named match zones ($ARGS_VAR:bla|$HEADERS_VAR:bla|$BODY_VAR:bla)
     */
-    if (custloc_array(curr->br->custom_locations->elts)[i].body_var) {
+    if (loc[i].body_var) {
       NX_LOG_DEBUG(_debug_whitelist_heavy,
                    NGX_LOG_EMERG,
                    cf,
                    0,
                    "whitelist has body_var %V",
-                   &(custloc_array(curr->br->custom_locations->elts)[i].target));
+                   &(loc[i].target));
 
       /*#217 : scream on incorrect rules*/
       if (*name_idx != -1) {
@@ -318,13 +329,13 @@ ngx_http_wlr_identify(ngx_conf_t*                cf,
       *name_idx = i;
       *zone     = BODY;
     }
-    if (custloc_array(curr->br->custom_locations->elts)[i].headers_var) {
+    if (loc[i].headers_var) {
       NX_LOG_DEBUG(_debug_whitelist_heavy,
                    NGX_LOG_EMERG,
                    cf,
                    0,
                    "whitelist has header_var %V",
-                   &(custloc_array(curr->br->custom_locations->elts)[i].target));
+                   &(loc[i].target));
 
       /*#217 : scream on incorrect rules*/
       if (*name_idx != -1) {
@@ -335,13 +346,9 @@ ngx_http_wlr_identify(ngx_conf_t*                cf,
       *name_idx = i;
       *zone     = HEADERS;
     }
-    if (custloc_array(curr->br->custom_locations->elts)[i].args_var) {
-      NX_LOG_DEBUG(_debug_whitelist_heavy,
-                   NGX_LOG_EMERG,
-                   cf,
-                   0,
-                   "whitelist has arg_var %V",
-                   &(custloc_array(curr->br->custom_locations->elts)[i].target));
+    if (loc[i].args_var) {
+      NX_LOG_DEBUG(
+        _debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist has arg_var %V", &(loc[i].target));
 
       /*#217 : scream on incorrect rules*/
       if (*name_idx != -1) {
@@ -353,8 +360,10 @@ ngx_http_wlr_identify(ngx_conf_t*                cf,
       *zone     = ARGS;
     }
   }
-  if (*zone == -1)
+  if (*zone == -1) {
+    NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist has missing zone");
     return (NGX_ERROR);
+  }
   return (NGX_OK);
 }
 
@@ -367,80 +376,85 @@ ngx_http_wlr_find(ngx_conf_t*                cf,
                   int                        name_idx,
                   char**                     fullname)
 {
-  uint i;
+  ngx_uint_t i;
 
   /* Create unique string for rule, and try to find it in existing rules.*/
   /*name AND uri*/
+
+  ngx_http_custom_rule_location_t* loc = custloc_array(curr->br->custom_locations->elts);
 
   if (uri_idx != -1 && name_idx != -1) {
     NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist has uri + name");
 
     /* allocate one extra byte in case curr->br->target_name is set. */
-    *fullname =
-      ngx_pcalloc(cf->pool,
-                  custloc_array(curr->br->custom_locations->elts)[name_idx].target.len +
-                    custloc_array(curr->br->custom_locations->elts)[uri_idx].target.len + 3);
+    *fullname = ngx_pcalloc(cf->pool, loc[name_idx].target.len + loc[uri_idx].target.len + 3);
     /* if WL targets variable name instead of content, prefix hash with '#' */
     if (curr->br->target_name) {
       NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist targets |NAME");
 
       strcat(*fullname, (const char*)"#");
     }
-    strncat(*fullname,
-            (const char*)custloc_array(curr->br->custom_locations->elts)[uri_idx].target.data,
-            custloc_array(curr->br->custom_locations->elts)[uri_idx].target.len);
+    strncat(*fullname, (const char*)loc[uri_idx].target.data, loc[uri_idx].target.len);
     strcat(*fullname, (const char*)"#");
-    strncat(*fullname,
-            (const char*)custloc_array(curr->br->custom_locations->elts)[name_idx].target.data,
-            custloc_array(curr->br->custom_locations->elts)[name_idx].target.len);
+    strncat(*fullname, (const char*)loc[name_idx].target.data, loc[name_idx].target.len);
   }
   /* only uri */
   else if (uri_idx != -1 && name_idx == -1) {
-    NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist has uri");
-
     // XXX set flag only_uri
-    *fullname = ngx_pcalloc(
-      cf->pool, custloc_array(curr->br->custom_locations->elts)[uri_idx].target.len + 3);
+    *fullname = ngx_pcalloc(cf->pool, loc[uri_idx].target.len + 3);
     if (curr->br->target_name) {
       NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist targets |NAME");
 
       strcat(*fullname, (const char*)"#");
     }
 
-    strncat(*fullname,
-            (const char*)custloc_array(curr->br->custom_locations->elts)[uri_idx].target.data,
-            custloc_array(curr->br->custom_locations->elts)[uri_idx].target.len);
+    strncat(*fullname, (const char*)loc[uri_idx].target.data, loc[uri_idx].target.len);
   }
   /* only name */
   else if (name_idx != -1) {
-    NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist has name");
+    NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "whitelist is name only");
 
-    *fullname = ngx_pcalloc(
-      cf->pool, custloc_array(curr->br->custom_locations->elts)[name_idx].target.len + 2);
-    if (curr->br->target_name)
+    *fullname = ngx_pcalloc(cf->pool, loc[name_idx].target.len + 2);
+    if (curr->br->target_name) {
       strcat(*fullname, (const char*)"#");
-    strncat(*fullname,
-            (const char*)custloc_array(curr->br->custom_locations->elts)[name_idx].target.data,
-            custloc_array(curr->br->custom_locations->elts)[name_idx].target.len);
+    }
+    strncat(*fullname, (const char*)loc[name_idx].target.data, loc[name_idx].target.len);
   }
   /* problem houston */
-  else
+  else {
     return (NULL);
+  }
 
+  ngx_http_whitelist_rule_t* wlr = (ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts;
   for (i = 0; i < dlc->tmp_wlr->nelts; i++)
-    if (!strcmp((const char*)*fullname,
-                (const char*)((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].name->data) &&
-        ((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].zone == (uint)zone) {
-      NX_LOG_DEBUG(_debug_whitelist_heavy,
-                   NGX_LOG_EMERG,
-                   cf,
-                   0,
-                   "found existing 'same' WL : %V",
-                   ((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].name);
+    if (!strcmp((const char*)*fullname, (const char*)wlr[i].name->data) &&
+        wlr[i].zone == (ngx_uint_t)zone) {
+      NX_LOG_DEBUG(
+        _debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "found existing 'same' WL : %V", wlr[i].name);
 
-      return (&((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i]);
+      return (&wlr[i]);
     }
   return (NULL);
+}
+
+static ngx_int_t
+push_entry_with_whitelist_rule(ngx_array_t* array, ngx_http_whitelist_rule_t* wlr)
+{
+  if (!array) {
+    // ignore the array if NULL.
+    return (NGX_OK);
+  }
+
+  ngx_hash_key_t* key = (ngx_hash_key_t*)ngx_array_push(array);
+  if (!key) {
+    return (NGX_ERROR);
+  }
+
+  ngx_memset(key, 0, sizeof(ngx_hash_key_t));
+  key->key      = *wlr->name;
+  key->key_hash = ngx_hash_key_lc(wlr->name->data, wlr->name->len);
+  key->value    = wlr;
+  return (NGX_OK);
 }
 
 static ngx_int_t
@@ -448,16 +462,21 @@ ngx_http_wlr_finalize_hashtables(ngx_conf_t* cf, ngx_http_naxsi_loc_conf_t* dlc)
 {
   int             get_sz = 0, headers_sz = 0, body_sz = 0, uri_sz = 0;
   ngx_array_t *   get_ar = NULL, *headers_ar = NULL, *body_ar = NULL, *uri_ar = NULL;
-  ngx_hash_key_t* arr_node;
   ngx_hash_init_t hash_init;
-  uint            i;
+  ngx_uint_t      i;
 
   NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "finalizing hashtables");
 
   if (dlc->whitelist_rules) {
-
+    ngx_http_whitelist_rule_t* wlr = (ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts;
     for (i = 0; i < dlc->tmp_wlr->nelts; i++) {
-      switch (((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].zone) {
+      switch (wlr[i].zone) {
+        case ANY:
+          get_sz++;
+          uri_sz++;
+          headers_sz++;
+          body_sz++;
+          break;
         case FILE_EXT:
         case BODY:
           body_sz++;
@@ -498,51 +517,42 @@ ngx_http_wlr_finalize_hashtables(ngx_conf_t* cf, ngx_http_naxsi_loc_conf_t* dlc)
     if (uri_sz) {
       uri_ar = ngx_array_create(cf->pool, uri_sz, sizeof(ngx_hash_key_t));
     }
+
     for (i = 0; i < dlc->tmp_wlr->nelts; i++) {
-      switch (((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].zone) {
+      switch (wlr[i].zone) {
+        case ANY: {
+          if (push_entry_with_whitelist_rule(body_ar, &wlr[i]) == NGX_ERROR ||
+              push_entry_with_whitelist_rule(headers_ar, &wlr[i]) == NGX_ERROR ||
+              push_entry_with_whitelist_rule(uri_ar, &wlr[i]) == NGX_ERROR ||
+              push_entry_with_whitelist_rule(get_ar, &wlr[i]) == NGX_ERROR) {
+            return (NGX_ERROR);
+          }
+        } break;
         case FILE_EXT:
-        case BODY:
-          arr_node = (ngx_hash_key_t*)ngx_array_push(body_ar);
-          break;
-        case HEADERS:
-          arr_node = (ngx_hash_key_t*)ngx_array_push(headers_ar);
-          break;
-        case URL:
-          arr_node = (ngx_hash_key_t*)ngx_array_push(uri_ar);
-          break;
-        case ARGS:
-          arr_node = (ngx_hash_key_t*)ngx_array_push(get_ar);
-          break;
+          /* fall-thru */
+        case BODY: {
+          if (push_entry_with_whitelist_rule(body_ar, &wlr[i]) == NGX_ERROR) {
+            return (NGX_ERROR);
+          }
+        } break;
+        case HEADERS: {
+          if (push_entry_with_whitelist_rule(headers_ar, &wlr[i]) == NGX_ERROR) {
+            return (NGX_ERROR);
+          }
+        } break;
+        case URL: {
+          if (push_entry_with_whitelist_rule(uri_ar, &wlr[i]) == NGX_ERROR) {
+            return (NGX_ERROR);
+          }
+        } break;
+        case ARGS: {
+          if (push_entry_with_whitelist_rule(get_ar, &wlr[i]) == NGX_ERROR) {
+            return (NGX_ERROR);
+          }
+        } break;
         default:
           return (NGX_ERROR);
       }
-      if (!arr_node) {
-        return (NGX_ERROR);
-      }
-      ngx_memset(arr_node, 0, sizeof(ngx_hash_key_t));
-      arr_node->key = *(((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].name);
-      arr_node->key_hash =
-        ngx_hash_key_lc(((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].name->data,
-                        ((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].name->len);
-      arr_node->value = (void*)&(((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i]);
-#ifdef SPECIAL__debug_whitelist_heavy
-      ngx_conf_log_error(NGX_LOG_EMERG,
-                         cf,
-                         0,
-                         "pushing new WL, zone:%d, target:%V, %d IDs",
-                         ((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].zone,
-                         ((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].name,
-                         ((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].ids->nelts);
-      unsigned int z;
-      for (z = 0; z < ((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].ids->nelts; z++) {
-        ngx_conf_log_error(
-          NGX_LOG_EMERG,
-          cf,
-          0,
-          "id:%d",
-          ((int*)((ngx_http_whitelist_rule_t*)dlc->tmp_wlr->elts)[i].ids->elts)[z]);
-      }
-#endif
     }
     hash_init.key         = &ngx_hash_key_lc;
     hash_init.pool        = cf->pool;
@@ -662,12 +672,13 @@ ngx_http_naxsi_create_hashtables_n(ngx_http_naxsi_loc_conf_t* dlc, ngx_conf_t* c
   ngx_http_rule_t**          rptr;
   ngx_regex_compile_t*       rgc;
   char*                      fullname;
-  uint                       i;
+  ngx_uint_t                 i;
 
-  if (!dlc->whitelist_rules || dlc->whitelist_rules->nelts < 1) {
-    NX_LOG_DEBUG(
-      _debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "No whitelist registred, but it's your call.");
-  }
+  NX_LOG_DEBUG(_debug_whitelist_heavy && (!dlc->whitelist_rules || dlc->whitelist_rules->nelts < 1),
+               NGX_LOG_EMERG,
+               cf,
+               0,
+               "No whitelist registred, but it's your call.");
 
   if (dlc->whitelist_rules) {
 
@@ -691,31 +702,33 @@ ngx_http_naxsi_create_hashtables_n(ngx_http_naxsi_loc_conf_t* dlc, ngx_conf_t* c
       if (!curr_r->br->custom_locations) {
         NX_LOG_DEBUG(_debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "WL %d is a disable rule.", i);
 
-        if (ngx_http_wlr_push_disabled(cf, dlc, curr_r) == NGX_ERROR)
+        if (ngx_http_wlr_push_disabled(cf, dlc, curr_r) == NGX_ERROR) {
           return (NGX_ERROR);
+        }
         continue;
       }
       ret = ngx_http_wlr_identify(cf, dlc, curr_r, &zone, &uri_idx, &name_idx);
-      if (ret != NGX_OK) /* LCOV_EXCL_START */
-      {
+      if (ret != NGX_OK) { /* LCOV_EXCL_START */
         ngx_conf_log_error(
           NGX_LOG_EMERG, cf, 0, "Following whitelist doesn't target any zone or is incorrect :");
-        if (name_idx != -1)
+        if (name_idx != -1) {
           ngx_conf_log_error(NGX_LOG_EMERG,
                              cf,
                              0,
-                             "whitelist target name : %V",
+                             "bad whitelist target name : %V",
                              &(custloc_array(curr_r->br->custom_locations->elts)[name_idx].target));
-        else
+        } else {
           ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "whitelist has no target name.");
-        if (uri_idx != -1)
+        }
+        if (uri_idx != -1) {
           ngx_conf_log_error(NGX_LOG_EMERG,
                              cf,
                              0,
-                             "whitelist target uri : %V",
+                             "bad whitelist target uri : %V",
                              &(custloc_array(curr_r->br->custom_locations->elts)[uri_idx].target));
-        else
+        } else {
           ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "whitelists has no target uri.");
+        }
         return (NGX_ERROR);
       } /* LCOV_EXCL_STOP */
       curr_r->br->zone = zone;
@@ -724,48 +737,47 @@ ngx_http_naxsi_create_hashtables_n(ngx_http_naxsi_loc_conf_t* dlc, ngx_conf_t* c
       ** Store them in a separate linked list, parsed
       ** at runtime.
       */
-      if (curr_r->br->rx_mz == 1) {
+      if (curr_r->br->rx_mz) {
         if (!dlc->rxmz_wlr) {
           dlc->rxmz_wlr = ngx_array_create(cf->pool, 1, sizeof(ngx_http_rule_t*));
-          if (!dlc->rxmz_wlr)
+          if (!dlc->rxmz_wlr) {
             return (NGX_ERROR); /* LCOV_EXCL_LINE */
+          }
         }
-        if (name_idx != -1 &&
-            !custloc_array(curr_r->br->custom_locations->elts)[name_idx].target_rx) {
-          custloc_array(curr_r->br->custom_locations->elts)[name_idx].target_rx =
-            ngx_pcalloc(cf->pool, sizeof(ngx_regex_compile_t));
-          rgc = custloc_array(curr_r->br->custom_locations->elts)[name_idx].target_rx;
+        ngx_http_custom_rule_location_t* cust_loc =
+          custloc_array(curr_r->br->custom_locations->elts);
+        if (name_idx != -1 && !cust_loc[name_idx].target_rx) {
+          cust_loc[name_idx].target_rx = rgc = ngx_pcalloc(cf->pool, sizeof(ngx_regex_compile_t));
           if (rgc) {
             rgc->options  = NAXSI_REGEX_OPTIONS;
-            rgc->pattern  = custloc_array(curr_r->br->custom_locations->elts)[name_idx].target;
+            rgc->pattern  = cust_loc[name_idx].target;
             rgc->pool     = cf->pool;
             rgc->err.len  = 0;
             rgc->err.data = NULL;
           }
-          // custloc_array(curr_r->br->custom_locations->elts)[name_idx].target;
-          if (ngx_regex_compile(rgc) != NGX_OK)
+          // cust_loc[name_idx].target;
+          if (!rgc || ngx_regex_compile(rgc) != NGX_OK) {
             return (NGX_ERROR);
+          }
         }
-        if (uri_idx != -1 &&
-            !custloc_array(curr_r->br->custom_locations->elts)[uri_idx].target_rx) {
-          custloc_array(curr_r->br->custom_locations->elts)[uri_idx].target_rx =
-            ngx_pcalloc(cf->pool, sizeof(ngx_regex_compile_t));
-          rgc = custloc_array(curr_r->br->custom_locations->elts)[uri_idx].target_rx;
+        if (uri_idx != -1 && !cust_loc[uri_idx].target_rx) {
+          cust_loc[uri_idx].target_rx = rgc = ngx_pcalloc(cf->pool, sizeof(ngx_regex_compile_t));
           if (rgc) {
             rgc->options  = NAXSI_REGEX_OPTIONS;
-            rgc->pattern  = custloc_array(curr_r->br->custom_locations->elts)[uri_idx].target;
+            rgc->pattern  = cust_loc[uri_idx].target;
             rgc->pool     = cf->pool;
             rgc->err.len  = 0;
             rgc->err.data = NULL;
           }
-          // custloc_array(curr_r->br->custom_locations->elts)[name_idx].target;
-          if (ngx_regex_compile(rgc) != NGX_OK)
+          if (!rgc || ngx_regex_compile(rgc) != NGX_OK) {
             return (NGX_ERROR);
+          }
         }
 
         rptr = ngx_array_push(dlc->rxmz_wlr);
-        if (!rptr)
+        if (!rptr) {
           return (NGX_ERROR);
+        }
         *rptr = curr_r;
         continue;
       }
@@ -774,33 +786,48 @@ ngx_http_naxsi_create_hashtables_n(ngx_http_naxsi_loc_conf_t* dlc, ngx_conf_t* c
       */
       father_wlr = ngx_http_wlr_find(cf, dlc, curr_r, zone, uri_idx, name_idx, (char**)&fullname);
       if (!father_wlr) {
-        NX_LOG_DEBUG(
-          _debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "creating fresh WL [%s].", fullname);
+        NX_LOG_DEBUG(_debug_whitelist_heavy,
+                     NGX_LOG_EMERG,
+                     cf,
+                     0,
+                     "creating fresh WL [%s] uri_idx(%d) name_idx(%d).",
+                     fullname,
+                     uri_idx,
+                     name_idx);
 
         /* creates a new whitelist rule in the right place.
            setup name and zone, create a new (empty) whitelist_location, as well
            as a new (empty) id aray. */
         father_wlr = ngx_array_push(dlc->tmp_wlr);
-        if (!father_wlr)
+        if (!father_wlr) {
           return (NGX_ERROR);
+        }
         memset(father_wlr, 0, sizeof(ngx_http_whitelist_rule_t));
         father_wlr->name = ngx_pcalloc(cf->pool, sizeof(ngx_str_t));
-        if (!father_wlr->name)
+        if (!father_wlr->name) {
           return (NGX_ERROR);
+        }
         father_wlr->name->len  = strlen((const char*)fullname);
         father_wlr->name->data = (unsigned char*)fullname;
         father_wlr->zone       = zone;
+
+        NX_LOG_DEBUG(
+          _debug_whitelist_heavy, NGX_LOG_EMERG, cf, 0, "father_wlr '%V'.", father_wlr->name);
+
         /* If there is URI and no name idx, specify it,
            so that WL system won't get fooled by an argname like an URL */
-        if (uri_idx != -1 && name_idx == -1)
+        if (uri_idx != -1 && name_idx == -1) {
           father_wlr->uri_only = 1;
+        }
         /* If target_name is present in son, report it. */
-        if (curr_r->br->target_name)
+        if (curr_r->br->target_name) {
           father_wlr->target_name = curr_r->br->target_name;
+        }
       }
       /*merges the two whitelist rules together, including custom_locations. */
-      if (ngx_http_wlr_merge(cf, father_wlr, curr_r) != NGX_OK)
+      if (ngx_http_wlr_merge(cf, father_wlr, curr_r) != NGX_OK) {
         return (NGX_ERROR);
+      }
     }
   }
 
@@ -817,8 +844,8 @@ ngx_http_naxsi_create_hashtables_n(ngx_http_naxsi_loc_conf_t* dlc, ngx_conf_t* c
   ip=<ip>&server=<server>&uri=<uri>&id=<id>&zone=<zone>&content=<content>
  */
 
-static const char* naxsi_match_zones[] = { "HEADERS",  "URL",     "ARGS", "BODY",
-                                           "FILE_EXT", "UNKNOWN", NULL };
+static const char* naxsi_match_zones[] = { "HEADERS",  "URL", "ARGS",    "BODY",
+                                           "FILE_EXT", "ANY", "UNKNOWN", NULL };
 
 void
 naxsi_log_offending(ngx_str_t*          name,
@@ -836,29 +863,32 @@ naxsi_log_offending(ngx_str_t*          name,
   tmp_uri.len = req->uri.len +
                 (2 * ngx_escape_uri(NULL, req->uri.data, req->uri.len, NGX_ESCAPE_URI_COMPONENT));
   tmp_uri.data = ngx_pcalloc(req->pool, tmp_uri.len + 1);
-  if (tmp_uri.data == NULL)
+  if (tmp_uri.data == NULL) {
     return;
+  }
   ngx_escape_uri(tmp_uri.data, req->uri.data, req->uri.len, NGX_ESCAPE_URI_COMPONENT);
   // encode val
-  if (val->len <= 0)
+  if (val->len <= 0) {
     tmp_val = empty;
-  else {
+  } else {
     tmp_val.len =
       val->len + (2 * ngx_escape_uri(NULL, val->data, val->len, NGX_ESCAPE_URI_COMPONENT));
     tmp_val.data = ngx_pcalloc(req->pool, tmp_val.len + 1);
-    if (tmp_val.data == NULL)
+    if (tmp_val.data == NULL) {
       return;
+    }
     ngx_escape_uri(tmp_val.data, val->data, val->len, NGX_ESCAPE_URI_COMPONENT);
   }
   // encode name
-  if (name->len <= 0)
+  if (name->len <= 0) {
     tmp_name = empty;
-  else {
+  } else {
     tmp_name.len =
       name->len + (2 * ngx_escape_uri(NULL, name->data, name->len, NGX_ESCAPE_URI_COMPONENT));
     tmp_name.data = ngx_pcalloc(req->pool, tmp_name.len + 1);
-    if (tmp_name.data == NULL)
+    if (tmp_name.data == NULL) {
       return;
+    }
     ngx_escape_uri(tmp_name.data, name->data, name->len, NGX_ESCAPE_URI_COMPONENT);
   }
 
@@ -877,12 +907,15 @@ naxsi_log_offending(ngx_str_t*          name,
                 &(tmp_name),
                 &(tmp_val));
 
-  if (tmp_val.len > 0)
+  if (tmp_val.len > 0) {
     ngx_pfree(req->pool, tmp_val.data);
-  if (tmp_name.len > 0)
+  }
+  if (tmp_name.len > 0) {
     ngx_pfree(req->pool, tmp_name.data);
-  if (tmp_uri.len > 0)
+  }
+  if (tmp_uri.len > 0) {
     ngx_pfree(req->pool, tmp_uri.data);
+  }
 }
 
 /*
@@ -911,4 +944,91 @@ nx_check_ids(ngx_int_t match_id, ngx_array_t* wl_ids)
     }
   }
   return (negative == 1);
+}
+
+static const cidr_t _illegal_cidrs_ipv4[] = {
+  /* 0.0.0.0/8 */
+  c_cidr4(0xFF000000u, 0u),
+  /* 255.255.255.255/32 */
+  c_cidr4(U32_MAX, U32_MAX),
+};
+
+static const cidr_t _illegal_cidrs_ipv6[] = {
+  /* 0000:0000:0000:0000:0000:0000:0000:0000/128 */
+  c_cidr6(U64_MAX, U64_MAX, 0, 0),
+  /* ff00:0000:0000:0000:0000:0000:0000:0000/8 */
+  c_cidr6(0xFF00000000000000ull, 0, 0xFF00000000000000ull, 0),
+};
+
+/*
+** Checks if the host name is illegal
+** Returns 1 if the ip is illegal
+*/
+int
+naxsi_is_illegal_host_name(const ngx_str_t* host_name)
+{
+  if (host_name->len < 1) {
+    return (0);
+  }
+
+  const size_t plen = host_name->len;
+  const char*  ptr  = (const char*)host_name->data;
+
+  if (!isalnum(ptr[0])) {
+    // RFC says host must start with a num or letter
+    return (1);
+  }
+
+  for (size_t i = 1; i < plen; ++i) {
+    if (!isalnum(ptr[i]) && ptr[i] != '-' && ptr[i] != '.' && ptr[i] != ':') {
+      // RFC only allows letters, numbers, dashes, dots and colon in the Host header
+      return (1);
+    }
+  }
+
+  // check if the host name is an ip and if it is in the reserved cidrs
+  ip_t ip;
+  if (!naxsi_parse_ip(host_name, &ip, NULL)) {
+    // ignore if is not an ip.
+    return (0);
+  }
+
+  const cidr_t* i_cidrs = NULL;
+  size_t        n_cidrs = 0;
+
+  if (ip.version == IPv4) {
+    i_cidrs = _illegal_cidrs_ipv4;
+    n_cidrs = array_size(_illegal_cidrs_ipv4);
+  } else {
+    i_cidrs = _illegal_cidrs_ipv6;
+    n_cidrs = array_size(_illegal_cidrs_ipv6);
+  }
+
+  // must check if the ip against illegal ip ranges
+  for (size_t i = 0; i < n_cidrs; ++i) {
+    const cidr_t* cidr = &i_cidrs[i];
+    if (naxsi_is_in_subnet(cidr, &ip)) {
+      return (1);
+    }
+  }
+
+  return (0);
+}
+
+/*
+** Creates a random request id and writes it into bytes
+*/
+void
+naxsi_generate_request_id(u_char* bytes)
+{
+#if (NGX_OPENSSL)
+  if (RAND_bytes(bytes, NAXSI_REQUEST_ID_SIZE) == 1) {
+    return;
+  }
+#endif
+  uint32_t*    bytes32 = (uint32_t*)bytes;
+  const size_t len     = (NAXSI_REQUEST_ID_SIZE / sizeof(uint32_t));
+  for (size_t i = 0; i < len; i++) {
+    bytes32[i] = (uint32_t)ngx_random();
+  }
 }

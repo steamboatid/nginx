@@ -16,6 +16,7 @@
 #include <subscribers/benchmark.h>
 #include <store/memory/store.h>
 #include <store/redis/store.h>
+#include <store/redis/redis_nodeset.h>
 
 #include <nchan_setup.c>
 
@@ -34,6 +35,7 @@
 
 ngx_int_t           nchan_worker_processes;
 int                 nchan_stub_status_enabled = 0;
+int                 nchan_redis_stats_enabled = 0;
 
 
 static void nchan_publisher_body_handler(ngx_http_request_t *r);
@@ -236,7 +238,9 @@ static ngx_int_t nchan_http_publisher_handler(ngx_http_request_t * r, void (*bod
 ngx_int_t nchan_stub_status_handler(ngx_http_request_t *r) {
   ngx_buf_t           *b;
   ngx_chain_t          out;
-  nchan_stub_status_t *stats;
+  
+  nchan_stats_global_t global;
+  nchan_stats_worker_t worker;
   
   nchan_main_conf_t   *mcf = ngx_http_get_module_main_conf(r, ngx_nchan_module);
   
@@ -250,6 +254,8 @@ ngx_int_t nchan_stub_status_handler(ngx_http_request_t *r) {
                       "subscribers: %ui\n"
                       "redis pending commands: %ui\n"
                       "redis connected servers: %ui\n"
+                      "redis unhealthy upstreams: %ui\n"
+                      "total redis commands sent: %ui\n"
                       "total interprocess alerts received: %ui\n"
                       "interprocess alerts in transit: %ui\n"
                       "interprocess queued alerts: %ui\n"
@@ -265,12 +271,15 @@ ngx_int_t nchan_stub_status_handler(ngx_http_request_t *r) {
   shmem_used = (float )((float )nchan_get_used_shmem() / 1024.0);
   shmem_max = (float )((float )mcf->shm_size / 1024.0);
   
-  stats = nchan_get_stub_status_stats();
+  if(nchan_stats_get_all(&worker, &global) != NGX_OK) {
+    nchan_log_request_error(r, "Failed to get stub status stats.");
+    return NGX_HTTP_INTERNAL_SERVER_ERROR;
+  }
   
   b->start = (u_char *)&b[1];
   b->pos = b->start;
   
-  b->end = ngx_snprintf(b->start, 800, buf_fmt, stats->total_published_messages, stats->messages, shmem_used, shmem_max, stats->channels, stats->subscribers, stats->redis_pending_commands, stats->redis_connected_servers, stats->ipc_total_alerts_received, stats->ipc_total_alerts_sent - stats->ipc_total_alerts_received, stats->ipc_queue_size, stats->ipc_total_send_delay, stats->ipc_total_receive_delay, NCHAN_VERSION);
+  b->end = ngx_snprintf(b->start, 800, buf_fmt, global.total_published_messages, worker.messages, shmem_used, shmem_max, worker.channels, worker.subscribers, worker.redis_pending_commands, worker.redis_connected_servers, worker.redis_unhealthy_upstreams, global.total_redis_commands_sent, global.total_ipc_alerts_received, global.total_ipc_alerts_sent - global.total_ipc_alerts_received, worker.ipc_queue_size, global.total_ipc_send_delay, global.total_ipc_receive_delay, NCHAN_VERSION);
   b->last = b->end;
 
   b->memory = 1;
@@ -289,7 +298,69 @@ ngx_int_t nchan_stub_status_handler(ngx_http_request_t *r) {
   return ngx_http_output_filter(r, &out);
 }
 
-int nchan_parse_message_buffer_config(ngx_http_request_t *r, nchan_loc_conf_t *cf, char **err) {
+static ngx_int_t redis_stats_callback(ngx_int_t rc, void *d, void *pd) {
+  redis_nodeset_command_stats_t *stats = d;
+  ngx_http_request_t            *r = pd;
+  ngx_str_t                      content_type_plain = ngx_string("text/plain");
+  ngx_str_t                      content_type_json = ngx_string("application/json");
+  
+  
+  if(stats->error) {
+    nchan_respond_cstring(r, NGX_HTTP_INTERNAL_SERVER_ERROR, &content_type_plain, stats->error, 1);
+    return NGX_OK;
+  }
+  
+  if(stats->count == 0 || stats->stats == NULL) {
+    nchan_respond_cstring(r, NGX_HTTP_INTERNAL_SERVER_ERROR, &content_type_plain, "weird error getting status data", 1);
+    return NGX_OK;
+  }
+  
+  ngx_chain_t *body = redis_nodeset_stats_response_body_chain_palloc(stats, r->pool);
+  if(!body) {
+    nchan_respond_cstring(r, NGX_HTTP_INTERNAL_SERVER_ERROR, &content_type_plain, "failed to allocate response body", 1);
+    return NGX_OK;
+  }
+  
+  r->headers_out.content_type = content_type_json;
+  nchan_respond_status(r, NGX_HTTP_OK, NULL, body, 1);
+  return NGX_OK;
+}
+
+ngx_int_t nchan_redis_stats_handler(ngx_http_request_t *r) {
+  nchan_loc_conf_t       *cf = ngx_http_get_module_loc_conf(r, ngx_nchan_module);
+  nchan_request_ctx_t    *ctx;
+  if((ctx = ngx_pcalloc(r->pool, sizeof(nchan_request_ctx_t))) == NULL) {
+    return NGX_HTTP_INTERNAL_SERVER_ERROR;
+  }
+  ngx_http_set_ctx(r, ctx, ngx_nchan_module);
+  
+  ngx_str_t             nodeset_name;
+  
+  if(ngx_http_complex_value(r, cf->redis.stats.upstream_name, &nodeset_name) != NGX_OK) {
+    return NGX_HTTP_INTERNAL_SERVER_ERROR;
+  }
+  
+  ngx_int_t             rc = redis_nodeset_global_command_stats_palloc_async(&nodeset_name, r->pool, redis_stats_callback, r);
+  ngx_str_t             content_type_plain = ngx_string("text/plain");
+  
+  
+  ctx->request_ran_content_handler = 1;
+  
+  switch(rc) {
+    case NGX_ERROR:
+      return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    case NGX_DECLINED:
+      nchan_respond_sprintf(r, NGX_HTTP_NOT_FOUND, &content_type_plain, 0, "Redis upstream \"%V\" not found", &nodeset_name);
+      return NGX_OK;
+    case NGX_DONE:
+      r->main->count++; //hold that request!
+      return NGX_DONE;
+    default:
+      return rc;
+  }
+}
+
+static int nchan_parse_message_buffer_config(ngx_http_request_t *r, nchan_loc_conf_t *cf, char **err) {
   ngx_str_t                      val;
   nchan_loc_conf_shared_data_t  *shcf;
   
@@ -622,7 +693,7 @@ static void really_publish_info_request(void *pd) {
   }
   
   cf->storage_engine->request_subscriber_info(channel_id, ctx->subscriber_info_response_id, cf, (callback_pt) &info_request_publish_callback, r);
-  nchan_update_stub_status(total_published_messages, 1);
+  nchan_stats_global_incr(total_published_messages, 1);
 }
 
 static void nchan_subscriber_info_publish_info_request_after_subscribing(subscriber_t *sub, void *pd) {
@@ -670,7 +741,7 @@ ngx_int_t nchan_pubsub_handler(ngx_http_request_t *r) {
     cf->storage_engine->set_group_limits(nchan_get_group_name(r, cf, ctx), cf, &group_limits, NULL, NULL);
   }
   else {
-    // there waas an error parsing group limit strings, and it has already been sent in the response. 
+    // there was an error parsing group limit strings, and it has already been sent in the response. 
     // just quit.
     return NGX_OK;
   }
@@ -1013,7 +1084,7 @@ static void nchan_publisher_post_request(ngx_http_request_t *r, ngx_str_t *conte
   }
   
   cf->storage_engine->publish(channel_id, msg, cf, (callback_pt) &publish_callback, pd);
-  nchan_update_stub_status(total_published_messages, 1);
+  nchan_stats_global_incr(total_published_messages, 1);
 #if FAKESHARD
   memstore_pub_debug_end();
 #endif

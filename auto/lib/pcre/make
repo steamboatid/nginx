@@ -59,7 +59,7 @@ if [ $PCRE_LIBRARY = PCRE2 ]; then
 
         cat << END                                            >> $NGX_MAKEFILE
 
-PCRE_CFLAGS =	-O2 -Ob1 -Oi -Gs $LIBC $CPU_OPT
+PCRE_CFLAGS =	-O3 -Ob1 -Oi -Gs $LIBC $CPU_OPT
 PCRE_FLAGS =	-DHAVE_CONFIG_H -DPCRE2_STATIC -DPCRE2_CODE_UNIT_WIDTH=8 \\
 		-DHAVE_MEMMOVE
 

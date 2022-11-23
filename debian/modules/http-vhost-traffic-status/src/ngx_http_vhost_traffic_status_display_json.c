@@ -10,6 +10,7 @@
 #include "ngx_http_vhost_traffic_status_display_json.h"
 #include "ngx_http_vhost_traffic_status_display.h"
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
 #include "ngx_http_upstream_check_module.h"
 #endif
@@ -57,6 +58,7 @@ ngx_http_vhost_traffic_status_display_set_server_node(
     u_char *buf, ngx_str_t *key,
     ngx_http_vhost_traffic_status_node_t *vtsn)
 {
+    u_char                                    *p, *c;
     ngx_int_t                                  rc;
     ngx_str_t                                  tmp, dst;
     ngx_http_vhost_traffic_status_loc_conf_t  *vtscf;
@@ -65,7 +67,24 @@ ngx_http_vhost_traffic_status_display_set_server_node(
 
     tmp = *key;
 
-    (void) ngx_http_vhost_traffic_status_node_position_key(&tmp, 1);
+    rc = ngx_http_vhost_traffic_status_node_position_key(&tmp, 1);
+    if (rc != NGX_OK) {
+        /* 
+         * If this function is called in the
+         * ngx_http_vhost_traffic_status_display_set_filter_node() function,
+         * there is no NGX_HTTP_VHOST_TRAFFIC_STATUS_KEY_SEPARATOR in key->data.
+         * It is normal.
+         */
+        p = ngx_strlchr(key->data, key->data + key->len, NGX_HTTP_VHOST_TRAFFIC_STATUS_KEY_SEPARATOR);
+        if (p != NULL) {
+            p = ngx_pnalloc(r->pool, key->len * 2 + 1);
+            c = ngx_hex_dump(p, key->data, key->len);
+            *c = '\0';
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          "display_set_server_node::node_position_key() key[%s:%p:%d], tmp[:%p:%d] failed",
+                          p, key->data, key->len, tmp.data, tmp.len);
+        }
+    }
 
     rc = ngx_http_vhost_traffic_status_escape_json_pool(r->pool, &dst, &tmp);
     if (rc != NGX_OK) {
@@ -123,7 +142,7 @@ ngx_http_vhost_traffic_status_display_set_server_node(
                       vtsn->stat_request_time_counter_oc);
 #else
     buf = ngx_sprintf(buf, NGX_HTTP_VHOST_TRAFFIC_STATUS_JSON_FMT_SERVER,
-                      key, vtsn->stat_request_counter,
+                      &dst, vtsn->stat_request_counter,
                       vtsn->stat_in_bytes,
                       vtsn->stat_out_bytes,
                       vtsn->stat_1xx_counter,
@@ -582,6 +601,8 @@ ngx_http_vhost_traffic_status_display_set_upstream_group(ngx_http_request_t *r,
                 usn.max_fails = peer->max_fails;
                 usn.fail_timeout = peer->fail_timeout;
                 usn.backup = 0;
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
                 if (ngx_http_upstream_check_peer_down(peer->check_index)) {
                     usn.down = 1;

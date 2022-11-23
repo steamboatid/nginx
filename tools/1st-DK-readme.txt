@@ -4,6 +4,7 @@ a. how to add dynamic modules
 b. change module symlink priority
 c. update/add existing modules
 d. patching main nginx src
+e. upgrading / bug fixing main repo
 
 
 
@@ -36,6 +37,8 @@ C1. change build options
 
 C2. merge to lxc
 ---------------------------------------------------------
+	domeld /tb2/root/github/nginx /tb2/tmp2/git-nginx-modules
+	domeld /tb2/tmp2/git-nginx-modules /tb2/root/github/nginx/debian/modules
 	domeld /var/lib/lxc/eye/rootfs/root/src/nginx/git-nginx/debian/modules /tb2/tmp2/git-nginx-modules
 
 rsync -aHAXvztrn --numeric-ids --ignore-existing \
@@ -105,9 +108,27 @@ D. PATCHING main nginx src
 
 
 
-E. BUG FIXING MAIN REPO
+E. UPGRADING / BUG FIXING main repo
 ---------------------------------------------------------
-- at host
-- do some changes of ~/github/nginx
-- execute at host :
-	cd ~/github/nginx; /bin/bash tools/loc-build.sh
+
+E1. AT HOST
+---------------------------------------------------------
+rm -rf /tmp/aa/nginx; \
+mkdir -p /tmp/aa; cd /tmp/aa; \
+git clone git@github.com:nginx/nginx.git; \
+atag=$(git tag --sort=-version:refname | head -n1); git checkout $atag
+domeld /tmp/aa/nginx ~/github/nginx
+
+
+E2. do some changes of ~/github/nginx
+
+E3. make sure this vars/consts NOT missing:
+---------------------------------------------------------
+NGX_UPSTREAM_CHECK_MODULE
+NGX_HTTP_UPSTREAM_CHECK
+//dkmods
+
+E4. execute at host :
+---------------------------------------------------------
+cd ~/github/nginx; /bin/bash tools/zbuild.sh
+cd ~/github/nginx; /bin/bash tools/loc-build.sh

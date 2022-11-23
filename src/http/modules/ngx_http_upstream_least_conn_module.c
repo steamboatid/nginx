@@ -9,6 +9,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
 #include "ngx_http_upstream_check_module.h"
 #endif
@@ -150,6 +151,7 @@ ngx_http_upstream_get_least_conn_peer(ngx_peer_connection_t *pc, void *data)
             continue;
         }
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
         ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
                 "get least_conn peer, check_index: %ui",
@@ -215,6 +217,7 @@ ngx_http_upstream_get_least_conn_peer(ngx_peer_connection_t *pc, void *data)
                 continue;
             }
 
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
                     "get least_conn peer, check_index: %ui",

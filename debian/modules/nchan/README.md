@@ -22,7 +22,7 @@ In a web browser, you can use Websocket or EventSource natively, or the [NchanSu
 
 ## Status and History
 
-The latest Nchan release is 1.2.15 (December 27, 2021) ([changelog](https://nchan.io/changelog)).
+The latest Nchan release is 1.3.5 (October 27, 2022) ([changelog](https://nchan.io/changelog)).
 
 The first iteration of Nchan was written in 2009-2010 as the [Nginx HTTP Push Module](https://pushmodule.slact.net), and was vastly refactored into its present state in 2014-2016.
 
@@ -277,7 +277,7 @@ Nchan supports several different kinds of subscribers for receiving messages: [*
   Initiated by explicitly including `chunked` in the [`TE` header](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.39):  
   `TE: chunked` (or `TE: chunked;q=??` where the qval > 0)  
   The response headers are sent right away, and each message will be sent as an individual chunk. Note that because a zero-length chunk terminates the transfer, **zero-length messages will not be sent** to the subscriber.  
-  Unlike the other subscriber types, the `chunked` subscriber cannot be used with http/2 because it dissallows chunked encoding.
+  Unlike the other subscriber types, the `chunked` subscriber cannot be used with http/2 because it disallows chunked encoding.
   <!-- tag:subscriber-chunked -->
 
 ## PubSub Endpoint  
@@ -285,7 +285,9 @@ Nchan supports several different kinds of subscribers for receiving messages: [*
 PubSub endpoints are Nginx config *locations* with the [*`nchan_pubsub`*](#nchan_pubsub) directive.
 
 A combination of *publisher* and *subscriber* endpoints, this location treats all HTTP `GET`
-requests as subscribers, and all HTTP `POST` as publishers. One simple use case is an echo server:
+requests as subscribers, and all HTTP `POST` as publishers. Channels cannot be deleted through a pubsub endpoing with an HTTP `DELETE` request.
+
+One simple use case is an echo server:
 
 ```nginx
   location = /pubsub {
@@ -307,7 +309,6 @@ A more interesting setup may set different publisher and subscriber channel ids:
 ```
 
 Here, subscribers will listen for messages on channel `foo`, and publishers will publish messages to channel `bar`. This can be useful when setting up websocket proxying between web clients and your application.
-
 <!-- tag:pubsub -->
 
 ## The Channel ID
@@ -546,7 +547,7 @@ Consider the configuration:
 ```
 
 Here, any request to the location `/pubsub/auth/<...>` will need to be authorized by your application (`my_app`). Nginx will generate a `GET /pubsub_authorize` request to the application, with additional headers set by the `proxy_set_header` directives. Note that Nchan-specific variables are available for this authorization request. Once your application receives this request, it should decide whether or not to authorize the subscriber. This can be done based on a forwarded session cookie, IP address, or any set of parameters of your choosing. If authorized, it should respond with an empty `200 OK` response.  
-All non-`2xx` response codes (such as `403 Forbidden`) are intepreted as authorization failures. In this case, the failing response is proxied to the client. 
+All non-`2xx` response codes (such as `403 Forbidden`) are interpreted as authorization failures. In this case, the failing response is proxied to the client. 
 
 Note that Websocket and EventSource clients will only try to authorize during the initial handshake request, whereas Long-Poll and Interval-Poll subscribers will need to be authorized each time they request the next message, which may flood your application with too many authorization requests.
 
@@ -669,7 +670,7 @@ Nchan can work with a single Redis master. It can also auto-discover and use Red
 <!-- commands: nchan_redis_server nchan_redis_pass -->
 
 #### Redis Cluster
-Nchan also supports using Redis Cluster, which adds scalability via sharding channels among cluster nodes. Redis cluster also provides **automatic failover**, **high availability**, and eliminates the single point of failure of one shared Redis server. It is configred and used like so:
+Nchan also supports using Redis Cluster, which adds scalability via sharding channels among cluster nodes. Redis cluster also provides **automatic failover**, **high availability**, and eliminates the single point of failure of one shared Redis server. It is configured and used like so:
 
 ```nginx
 http {
@@ -704,11 +705,14 @@ Redis Cluster connections are designed to be resilient and try to recover from e
 
 All Nchan servers sharing a Redis server or cluster should have their times synchronized (via ntpd or your favorite ntp daemon). Failure to do so may result in missed or duplicate messages.
 
+##### Failover Recovery
+Starting with version 1.3.0, Nchan will attempt to recover from cluster node failures, keyslot errors, and cluster epoch changes without disconnecting from the entire cluster. It will attempt to do this until [`nchan_redis_cluster_max_failing_time`](#nchan_redis_cluster_max_failing_time) is exceeded. Additionally, [recovery attempt delays](#nchan_redis_cluster_recovery_delay) have configurable [jitter](#nchan_redis_cluster_recovery_delay_jitter), [exponential backoff](#nchan_redis_cluster_recovery_delay_backoff), and [maximum](#nchan_redis_cluster_recovery_delay_max) values.
+
 #### Using Redis securely
 
-Redis servers can be connected to via TLS by using the [nchan_redis_ssl](#nchan_redis_ssl) config setting in an `upstream` block, or by using the `rediss://`  schema for the server URLs.
+Redis servers can be connected to via TLS by using the [`nchan_redis_ssl`](#nchan_redis_ssl) config setting in an `upstream` block, or by using the `rediss://`  schema for the server URLs.
 
-A password and optional username for the `AUTH` command can be set by the [nchan_redis_username](#nchan_redis_username) and [nchan_redis_password](#nchan_redis_password) config settings in an `upstream` block, or by using the `redis://<username>:<password>@hostname` server URL schema.
+A password and optional username for the `AUTH` command can be set by the [`nchan_redis_username`](#nchan_redis_username) and [`nchan_redis_password`](#nchan_redis_password) config settings in an `upstream` block, or by using the `redis://<username>:<password>@hostname` server URL schema.
 
 Note that autodiscovered Redis nodes inherit their parent's SSL, username, and password settings.
 
@@ -717,6 +721,85 @@ Note that autodiscovered Redis nodes inherit their parent's SSL, username, and p
 As of version 1.2.0, Nchan uses Redis slaves to load-balance PUBSUB traffic. By default, there is an equal chance that a channel's PUBSUB subscription will go to any master or slave. The [`nchan_redis_subscribe_weights`](#nchan_redis_subscribe_weights) setting is available to fine-tune this load-balancing.
 
 Also from 1.2.0 onward, [`nchan_redis_optimize_target`](#nchan_redis_optimize_target) can be used to prefer optimizing Redis slaves for CPU or bandwidth. For heavy publishing loads, the tradeoff is very roughly 35% replication bandwidth per slave to 30% CPU load on slaves.
+
+#### Performance Statistics
+
+Redis command statistics were added in version 1.3.5. These provide total number of times different Redis commands were run on, and the total amount of time they took. The stats are for a given Nchan server, *not* all servers connected to a Redis upstream. They are grouped by each upstream, and totaled per node.
+
+```nginx
+http {
+  upstream my_redis_cluster {
+    nchan_redis_server 127.0.0.1;
+  }
+  
+  server {
+    #[...]
+    
+    location ~ /nchan_redis_cluster_stats$ {
+      nchan_redis_upstream_stats my_redis_cluster;
+    }
+  }
+
+```
+
+To get the stats, send a GET request to the stats location.
+
+```console
+  curl http://localhost/nchan_redis_cluster_stats
+```
+
+The response is JSON of the form:
+
+```js
+{
+  "upstream": "redis_cluster",
+  "nodes": [
+    {
+      "address"        : "127.0.0.1:7000",
+      "id"             : "f13d71b1d14d8bf92b72cebee61421294e95dc72",
+      "command_totals" : {
+        "connect"    : {
+          "msec"     : 357,
+          "times"    : 5
+        },
+        "pubsub_subscribe": {
+          "msec"     : 749,
+          "times"    : 37
+        },
+        "pubsub_unsubsribe": {
+          "msec"     : 332,
+          "times"    : 37
+        }
+        /*[...]*/
+      }
+    },
+    {
+      "address"        : "127.0.0.1:7001",
+      "id"             : "b768ecb4152912bed6dc927e8f70284191a79ed7",
+      "command_totals" : {
+        "connect"    : {
+          "msec"     : 4281,
+          "times"    : 5
+        },
+        "pubsub_subscribe": {
+          "msec"     : 309,
+          "times"    : 33
+        },
+        "pubsub_unsubsribe": {
+          "msec"     : 307,
+          "times"    : 30
+        },
+        /*[...]*/
+      },
+    }
+    /*[...]*/
+  ]
+}
+```
+
+For brevity, the entire `command_totals` hash is omitted in this documentation.
+
+<!-- commands: nchan_redis_upstream_stats nchan_redis_upstream_stats_disconnected_timeout nchan_redis_upstream_stats_enabled -->
 
 ## Introspection
 
@@ -794,6 +877,8 @@ channels: 80
 subscribers: 90
 redis pending commands: 0
 redis connected servers: 0
+redis unhealthy upstreams: 0
+total redis commands sent: 0
 total interprocess alerts received: 1059634
 interprocess alerts in transit: 0
 interprocess queued alerts: 0
@@ -810,6 +895,8 @@ Here's what each line means, and how to interpret it:
   - `subscribers`: Number of subscribers to all channels on this Nchan server.
   - `redis pending commands`: Number of commands sent to Redis that are awaiting a reply. May spike during high load, especially if the Redis server is overloaded. Should tend towards 0.
   - `redis connected servers`: Number of redis servers to which Nchan is currently connected.
+  - `redis unhealthy upstreams`: Number of redis upstreams (individual server or cluster mode) that are currently not usable for publishing and subscribing.
+  - `total redis commands sent`: Total number of commands this Nchan instance sent to Redis.
   - `total interprocess alerts received`: Number of interprocess communication packets transmitted between Nginx workers processes for Nchan. Can grow at 100-10000 per second at high load.
   - `interprocess alerts in transit`: Number of interprocess communication packets in transit between Nginx workers. May be nonzero during high load, but should always tend toward 0 over time.
   - `interprocess queued alerts`: Number of interprocess communication packets waiting to be sent. May be nonzero during high load, but should always tend toward 0 over time.
@@ -817,19 +904,7 @@ Here's what each line means, and how to interpret it:
   - `total interprocess receive delay`: Total amount of time interprocess communication packets spend in transit if delayed. May increase during high load.
   - `nchan_version`: current version of Nchan. Available for version 1.1.5 and above.
 
-Additionally, when there is at least one `nchan_stub_status` location, the following Nginx variables are available:
-  - `$nchan_stub_status_total_published_messages`  
-  - `$nchan_stub_status_stored_messages`  
-  - `$nchan_stub_status_shared_memory_used`  
-  - `$nchan_stub_status_channels`  
-  - `$nchan_stub_status_subscribers`  
-  - `$nchan_stub_status_redis_pending_commands`  
-  - `$nchan_stub_status_redis_connected_servers`  
-  - `$nchan_stub_status_total_ipc_alerts_received`  
-  - `$nchan_stub_status_ipc_queued_alerts`  
-  - `$nchan_stub_status_total_ipc_send_delay`  
-  - `$nchan_stub_status_total_ipc_receive_delay`  
-
+Additionally, when there is at least one `nchan_stub_status` location, this data is also available [through variables](#variables).
   
 ## Securing Channels
 
@@ -920,7 +995,7 @@ An ID that can be guessed is an ID that can be hijacked. If you are not authenti
 #### X-Accel-Redirect
 
 This feature uses the [X-Accel feature](https://www.nginx.com/resources/wiki/start/topics/examples/x-accel) of Nginx upstream proxies to perform an internal request to a subscriber endpoint.
-It allows a subscriber client to be authenticated by your application, and then redirected by nginx internally to a location chosen by your appplication (such as a publisher or subscriber endpoint). This makes it possible to have securely authenticated clients that are unaware of the channel id they are subscribed to.
+It allows a subscriber client to be authenticated by your application, and then redirected by nginx internally to a location chosen by your application (such as a publisher or subscriber endpoint). This makes it possible to have securely authenticated clients that are unaware of the channel id they are subscribed to.
 
 Consider the following configuration:
 ```nginx 
@@ -1041,6 +1116,7 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
 - `$nchan_stub_status_subscribers`  
 - `$nchan_stub_status_redis_pending_commands`  
 - `$nchan_stub_status_redis_connected_servers`  
+- `$nchan_stub_status_redis_unhealthy_upstreams`  
 - `$nchan_stub_status_total_ipc_alerts_received`  
 - `$nchan_stub_status_ipc_queued_alerts`  
 - `$nchan_stub_status_total_ipc_send_delay`  
@@ -1355,15 +1431,81 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
   legacy name: push_message_timeout  
   > Publisher configuration setting the length of time a message may be queued before it is considered expired. If you do not want messages to expire, set this to 0. Note that messages always expire from oldest to newest, so an older message may prevent a newer one with a shorter timeout from expiring. An Nginx variable can also be used to set the timeout dynamically.    
 
-- **nchan_redis_cluster_check_interval**  
+- **nchan_redis_accurate_subscriber_count**  
+  arguments: 1  
+  default: `off`  
+  context: upstream  
+  > When disabled, use fast but potentially inaccurate subscriber counts. These may become inaccurate if Nginx workers exit uncleanly or are terminated. When enabled, use a slightly slower but completely accurate subscriber count. Defaults to 'off' for legacy reasons, but will be enabled by default in the future.    
+
+- **nchan_redis_cluster_check_interval_backoff** `<floating point> >= 0, ratio of current delay`  
+  arguments: 1  
+  default: `2 (increase delay by 200% each try)`  
+  context: upstream  
+  > Add an exponentially increasing delay to the Redis cluster check interval. `Delay[n] = (Delay[n-1] + jitter) * (nchan_redis_cluster_check_interval_backoff + 1)`.    
+
+- **nchan_redis_cluster_check_interval_jitter** `<floating point> >= 0, (0 to disable)`  
+  arguments: 1  
+  default: `0.2 (20% of interval value)`  
+  context: upstream  
+  > Introduce random jitter to Redis cluster check interval, where the range is `±(cluster_check_interval * nchan_redis_cluster_check_interval_jitter) / 2`.    
+
+- **nchan_redis_cluster_check_interval_max** `<time> (0 to disable)`  
+  arguments: 1  
+  default: `30s`  
+  context: upstream  
+  > Maximum Redis cluster check interval after backoff and jitter.    
+
+- **nchan_redis_cluster_check_interval_min** `<time>`  
+  arguments: 1  
+  default: `1s (0 to disable)`  
+  context: upstream  
+  > When connected to a cluster, periodically check the cluster state and layout via a random master node.    
+
+- **nchan_redis_cluster_connect_timeout**  
+  arguments: 1  
+  default: `15s`  
+  context: upstream  
+  > Redis cluster connection timeout.    
+
+- **nchan_redis_cluster_max_failing_time**  
+  arguments: 1  
+  default: `30s`  
+  context: upstream  
+  > Maximum time a Redis cluster can be in a failing state before Nchan disconnects from it. During this time, Nchan will try to recover from a cluster or node failure without disconnecting the entire cluster.    
+
+- **nchan_redis_cluster_recovery_delay** `<time>`  
+  arguments: 1  
+  default: `100ms`  
+  context: upstream  
+  > After a cluster recovery failure, wait this long to try again.    
+
+- **nchan_redis_cluster_recovery_delay_backoff** `<floating point> >= 0, ratio of current delay`  
+  arguments: 1  
+  default: `0.5 (increase delay by 50% each try)`  
+  context: upstream  
+  > Add an exponentially increasing delay to Redis cluster recovery retries. `Delay[n] = (Delay[n-1] + jitter) * (nchan_redis_cluster_recovery_delay_backoff + 1)`.    
+
+- **nchan_redis_cluster_recovery_delay_jitter** `<floating point> >= 0, (0 to disable)`  
+  arguments: 1  
+  default: `0.5 (50% of delay value)`  
+  context: upstream  
+  > Introduce random jitter to Redis cluster recovery retry time, where the range is `±(recovery_delay * nchan_redis_cluster_recovery_delay_jitter) / 2`.    
+
+- **nchan_redis_cluster_recovery_delay_max** `<time> (0 to disable)`  
+  arguments: 1  
+  default: `2s`  
+  context: upstream  
+  > Maximum Redis cluster recovery delay after backoff and jitter.    
+
+- **nchan_redis_command_timeout** `<time> (0 to leave unlimited)`  
   arguments: 1  
   default: `5s`  
-  context: http, server, upstream, location  
-  > Send a CLUSTER INFO command to each connected Redis node to see if the cluster config epoch has changed. Sent only when in Cluster mode and if any other command that may result in a MOVE error has not been sent in the configured time.    
+  context: upstream  
+  > If a Redis server exceeds this time to produce a command reply, it is considered unhealthy and is disconnected.    
 
 - **nchan_redis_connect_timeout**  
   arguments: 1  
-  default: `600ms`  
+  default: `10s`  
   context: upstream  
   > Redis server connection timeout.    
 
@@ -1391,9 +1533,9 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
 
 - **nchan_redis_optimize_target** `[ cpu | bandwidth ]`  
   arguments: 1  
-  default: `cpu`  
+  default: `bandwidth`  
   context: upstream  
-  > This tweaks whether [effect replication](https://redis.io/commands/eval#replicating-commands-instead-of-scripts) is enabled. Optimizing for CPU usage enables effect replication, costing additional bandwidth (between 1.2 and 2 times more) between all master->slave links. Optimizing for bandwidth increases CPU load on slaves, but keeps outgoing bandwidth used for replication the same as the incoming bandwidth on Master.    
+  > This tweaks whether [effect replication](https://redis.io/commands/eval#replicating-commands-instead-of-scripts) is enabled. This setting is obsolete, as effect replication is now always enabled to support other features    
 
 - **nchan_redis_pass** `<upstream-name>`  
   arguments: 1  
@@ -1413,6 +1555,42 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
   context: http, server, upstream, location  
   > Send a keepalive command to redis to keep the Nchan redis clients from disconnecting. Set to 0 to disable.    
 
+- **nchan_redis_reconnect_delay** `<time>`  
+  arguments: 1  
+  default: `500ms`  
+  context: upstream  
+  > After a connection failure, wait this long before trying to reconnect to Redis.    
+
+- **nchan_redis_reconnect_delay_backoff** `<floating point> >= 0 (0 to disable)`  
+  arguments: 1  
+  default: `0.5 (increase delay by 50% each try)`  
+  context: upstream  
+  > Add an exponentially increasing delay to Redis connection retries. `Delay[n] = (Delay[n-1] + jitter) * (nchan_redis_reconnect_delay_backoff + 1)`.    
+
+- **nchan_redis_reconnect_delay_jitter** `<floating point> >= 0 (0 to disable)`  
+  arguments: 1  
+  default: `0.1 (10% of delay value)`  
+  context: upstream  
+  > Introduce random jitter to Redis reconnection time, where the range is `±(reconnect_delay * nchan_redis_reconnect_delay_jitter) / 2`.    
+
+- **nchan_redis_reconnect_delay_max** `<time> (0 to disable)`  
+  arguments: 1  
+  default: `10s`  
+  context: upstream  
+  > Maximum Redis reconnection delay after backoff and jitter.    
+
+- **nchan_redis_retry_commands**  
+  arguments: 1  
+  default: `on`  
+  context: upstream  
+  > Allow Nchan to retry some Redis commands on keyslot errors and cluster unavailability. Queuing up a lot of commands while the cluster is unavailable may lead to excessive memory use, but it can also defer commands during transient failures.    
+
+- **nchan_redis_retry_commands_max_wait** `<time> (0 to leave unlimited)`  
+  arguments: 1  
+  default: `500ms`  
+  context: upstream  
+  > When `nchan_redis_retry_commands` is on, the maximum time a command will stayed queued to be retried.    
+
 - **nchan_redis_server** `<redis-url>`  
   arguments: 1  
   context: upstream  
@@ -1429,7 +1607,7 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
   arguments: 1  
   default: `<system default>`  
   context: upstream  
-  > Acceptable cipers when using TLS for Redis connections    
+  > Acceptable ciphers when using TLS for Redis connections    
 
 - **nchan_redis_ssl_client_certificate**  
   arguments: 1  
@@ -1455,7 +1633,7 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
   arguments: 1  
   default: `<system default>`  
   context: upstream  
-  > Trusted certificate (CA) when using TLS for Redis connections. Defaults tothe system's SSL cert path unless nchan_redis_ssl_trusted_certificate is set    
+  > Trusted certificate (CA) when using TLS for Redis connections. Defaults to the system's SSL cert path unless nchan_redis_ssl_trusted_certificate is set    
 
 - **nchan_redis_ssl_verify_certificate** `[ on | off ]`  
   arguments: 1  
@@ -1469,7 +1647,7 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
   context: http, server, upstream, location  
   > The mode of operation of the Redis server. In `distributed` mode, messages are published directly to Redis, and retrieved in real-time. Any number of Nchan servers in distributed mode can share the Redis server (or cluster). Useful for horizontal scalability, but suffers the latency penalty of all message publishing going through Redis first.  
   >   
-  > In `backup` mode, messages are published locally first, then later forwarded to Redis, and are retrieved only upon chanel initialization. Only one Nchan server should use a Redis server (or cluster) in this mode. Useful for data persistence without sacrificing response times to the latency of a round-trip to Redis.  
+  > In `backup` mode, messages are published locally first, then later forwarded to Redis, and are retrieved only upon channel initialization. Only one Nchan server should use a Redis server (or cluster) in this mode. Useful for data persistence without sacrificing response times to the latency of a round-trip to Redis.  
   >   
   > In `nostore` mode, messages are published as in `distributed` mode, but are not stored. Thus Redis is used to broadcast messages to many Nchan instances with no delivery guarantees during connection failure, and only local in-memory storage. This means that there are also no message delivery guarantees for subscribers switching from one Nchan instance to another connected to the same Redis server or cluster. Nostore mode increases Redis publishing capacity by an order of magnitude.    
 
@@ -1478,6 +1656,24 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
   default: `master=1 slave=1`  
   context: upstream  
   > Determines how subscriptions to Redis PUBSUB channels are distributed between master and slave nodes. The higher the number, the more likely that each node of that type will be chosen for each new channel. The weights for slave nodes are cumulative, so an equal 1:1 master:slave weight ratio with two slaves would have a 1/3 chance of picking a master, and 2/3 chance of picking one of the slaves. The weight must be a non-negative integer.    
+
+- **nchan_redis_upstream_stats** `<upstream_name>`  
+  arguments: 1  
+  default: `(none)`  
+  context: server, location  
+  > Defines a location as redis statistics endpoint. GET requests to this location produce a JSON response with detailed listings of total Redis command times and number of calls, broken down by node and command type. Useful for making graphs about Redis performance. Can be set with nginx variables.    
+
+- **nchan_redis_upstream_stats_disconnected_timeout**  
+  arguments: 1  
+  default: `5m`  
+  context: upstream  
+  > Keep stats for disconnected nodes around for this long. Useful for tracking stats for nodes that have intermittent connectivity issues.    
+
+- **nchan_redis_upstream_stats_enabled** `[ on | off ]`  
+  arguments: 1  
+  default: `<on> if at least 1 redis stats location is configured, otherwise <off>`  
+  context: upstream  
+  > Gather Redis node command timings for this upstream    
 
 - **nchan_redis_url** `<redis-url>`  
   arguments: 1  
@@ -1543,10 +1739,6 @@ Additionally, `nchan_stub_status` data is also exposed as variables. These are a
   default: `memory`  
   context: http, server, location  
   > Development directive to completely replace default storage engine. Don't use unless you are an Nchan developer.    
-
-- **nchan_redis_wait_after_connecting**  
-  arguments: 1  
-  context: http, server, location  
 
 ## Contribute
 Please support this project with a donation to keep me warm through the winter. I accept bitcoin at 15dLBzRS4HLRwCCVjx4emYkxXcyAPmGxM3 . Other donation methods can be found at https://nchan.io

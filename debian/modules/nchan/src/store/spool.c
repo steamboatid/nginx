@@ -646,15 +646,6 @@ static ngx_int_t spool_respond_general(subscriber_pool_t *self, nchan_msg_t *msg
 
 /////////// SPOOLER - container of several spools //////////
 
-channel_spooler_t *create_spooler() {
-  channel_spooler_t  *spooler;
-  if((spooler = ngx_alloc(sizeof(*spooler), ngx_cycle->log))==NULL) {
-    ERR("Can't allocate spooler");
-    return NULL;
-  }
-  return spooler;
-}
-
 static void spool_bubbleup_dequeue_handler(subscriber_pool_t *spool, subscriber_t *sub, channel_spooler_t *spl) {
   //bubble on up, yeah
   channel_spooler_handlers_t *h = spl->handlers;
@@ -937,7 +928,7 @@ static ngx_int_t spooler_respond_status(channel_spooler_t *self, nchan_msg_id_t 
 static ngx_int_t spooler_respond_message(channel_spooler_t *self, nchan_msg_t *msg) {
   spooler_respond_data_t     srdata;
   subscriber_pool_t         *spool;
-  ngx_int_t                  responded_subs = 0;
+  //ngx_int_t                  responded_subs = 0;
   
   
   if(self->fetching_strategy != NCHAN_SPOOL_PASSTHROUGH) {
@@ -959,7 +950,7 @@ static ngx_int_t spooler_respond_message(channel_spooler_t *self, nchan_msg_t *m
     }
     */
     while((spool = spoolcollector_unwind_nextspool(&srdata)) != NULL) {
-      responded_subs += spool->sub_count;
+      //responded_subs += spool->sub_count;
       if(msg->id.tagcount > NCHAN_FIXED_MULTITAG_MAX) {
         assert(spool->id.tag.allocd != msg->id.tag.allocd);
       }

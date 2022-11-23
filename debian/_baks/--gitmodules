@@ -1,0 +1,117 @@
+
+[submodule "debian/modules/http-accept-language"]
+	path = debian/modules/http-accept-language
+	url = https://github.com/steamboatid/nginx_accept_language_module
+
+[submodule "debian/modules/http-upstream-fair"]
+	path = debian/modules/http-upstream-fair
+	url = https://github.com/gnosek/nginx-upstream-fair
+
+[submodule "debian/modules/rtmp"]
+	path = debian/modules/rtmp
+	url = https://github.com/arut/nginx-rtmp-module
+
+[submodule "debian/modules/http-dav-ext"]
+	path = debian/modules/http-dav-ext
+	url = https://github.com/arut/nginx-dav-ext-module
+
+[submodule "debian/modules/njs"]
+	path = debian/modules/njs
+	url = https://github.com/nginx/njs
+
+[submodule "debian/modules/http-lua"]
+	path = debian/modules/http-lua
+	url = https://github.com/openresty/lua-nginx-module
+
+[submodule "debian/modules/http-ndk"]
+	path = debian/modules/http-ndk
+	url = https://github.com/simpl/ngx_devel_kit
+
+[submodule "debian/modules/http-brotli"]
+	path = debian/modules/http-brotli
+	url = https://github.com/google/ngx_brotli
+
+[submodule "debian/modules/ssl-ct"]
+	path = debian/modules/ssl-ct
+	url = https://github.com/grahamedgecombe/nginx-ct
+
+[submodule "debian/modules/http-push-stream"]
+	path = debian/modules/http-push-stream
+	url = https://github.com/wandenberg/nginx-push-stream-module
+
+[submodule "debian/modules/http-auth-pam"]
+	path = debian/modules/http-auth-pam
+	url = https://github.com/sto/ngx_http_auth_pam_module
+
+[submodule "debian/modules/http-uploadprogress"]
+	path = debian/modules/http-uploadprogress
+	url = https://github.com/masterzen/nginx-upload-progress-module
+
+[submodule "debian/modules/http-auth-ldap"]
+	path = debian/modules/http-auth-ldap
+	url = https://github.com/kvspb/nginx-auth-ldap
+
+[submodule "debian/modules/http-cookie-flag-filter"]
+	path = debian/modules/http-cookie-flag-filter
+	url = https://github.com/AirisX/nginx_cookie_flag_module
+
+[submodule "debian/modules/http-geoip2"]
+	path = debian/modules/http-geoip2
+	url = https://github.com/leev/ngx_http_geoip2_module
+
+[submodule "debian/modules/http-subs-filter"]
+	path = debian/modules/http-subs-filter
+	url = https://github.com/yaoweibin/ngx_http_substitutions_filter_module
+
+[submodule "debian/modules/http-waf"]
+	path = debian/modules/http-waf
+	url = https://github.com/ADD-SP/ngx_waf
+
+[submodule "debian/modules/http-waf/inc/libinjection"]
+	path = debian/modules/http-waf/inc/libinjection
+	url = https://github.com/libinjection/libinjection
+	branch = main
+
+[submodule "debian/modules/http-waf/inc/uthash"]
+	path = debian/modules/http-waf/inc/uthash
+	url = https://github.com/troydhanson/uthash
+
+[submodule "debian/modules/http-vhost-traffic-status"]
+	path = debian/modules/http-vhost-traffic-status
+	url = https://github.com/vozlt/nginx-module-vts
+
+[submodule "debian/modules/naxsi"]
+	path = debian/modules/naxsi
+	url = https://github.com/nbs-system/naxsi
+
+[submodule "debian/modules/http-enhanced-memcached"]
+	path = debian/modules/http-enhanced-memcached
+	url = https://github.com/bpaquet/ngx_http_enhanced_memcached_module
+
+[submodule "debian/modules/http-headers-more-filter"]
+	path = debian/modules/http-headers-more-filter
+	url = https://github.com/agentzh/headers-more-nginx-module
+
+[submodule "debian/modules/http-echo"]
+	path = debian/modules/http-echo
+	url = https://github.com/agentzh/echo-nginx-module
+
+[submodule "debian/modules/http-redis2"]
+	path = debian/modules/http-redis2
+	url = https://github.com/openresty/redis2-nginx-module
+
+[submodule "debian/modules/http-fancyindex"]
+	path = debian/modules/http-fancyindex
+	url = https://github.com/aperezdc/ngx-fancyindex
+
+[submodule "debian/modules/http-cache-purge"]
+	path = debian/modules/http-cache-purge
+	url = https://github.com/FRiCKLE/ngx_cache_purge
+
+[submodule "debian/modules/nchan"]
+	path = debian/modules/nchan
+	url = https://github.com/slact/nchan
+
+[submodule "debian/modules/http-set-misc"]
+	path = debian/modules/http-set-misc
+	url = https://github.com/openresty/set-misc-nginx-module

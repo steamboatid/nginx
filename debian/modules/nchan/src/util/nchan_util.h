@@ -20,9 +20,15 @@ ngx_buf_t *nchan_chain_to_single_buffer(ngx_pool_t *pool, ngx_chain_t *chain, si
 ngx_str_t *ngx_http_debug_pool_str(ngx_pool_t *pool);
 int nchan_strmatch(ngx_str_t *val, ngx_int_t n, ...);
 int nchan_cstrmatch(char *cstr, ngx_int_t n, ...);
-int nchan_cstr_startswith(char *cstr, char *match);
+int nchan_cstr_startswith(const char *cstr, const char *match);
 int nchan_str_startswith(ngx_str_t *str, const char *match);
 int nchan_str_after(ngx_str_t **str, const char *match);
+
+ngx_msec_t nchan_set_next_backoff(ngx_msec_t *backoff, nchan_backoff_settings_t *settings);
+void nchan_conf_merge_backoff_value(nchan_backoff_settings_t *cur, const nchan_backoff_settings_t *prev, const nchan_backoff_settings_t *defaults);
+extern const nchan_backoff_settings_t NCHAN_CONF_UNSEC_BACKOFF;
+
+double nchan_atof(u_char *line, ssize_t n);
 
 void nchan_scan_split_by_chr(u_char **cur, size_t max_len, ngx_str_t *str, u_char chr);
 void nchan_scan_until_chr_on_line(ngx_str_t *line, ngx_str_t *str, u_char chr);

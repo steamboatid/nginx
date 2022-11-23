@@ -1,3 +1,10 @@
+nginx (1.23.2.1+20221123-1619+11.5+bullseye+dk.omd.id) buster; urgency=high
+
+  * simple rebuild bullseye + O3 flag (custom build debian bullseye
+    11.5)
+
+ -- Dwi Kristianto <steamboatid@gmail.com>  Wed, 23 Nov 2022 16:19:05 +0700
+
 nginx (1.22.0-3) unstable; urgency=medium
 
   * d/changelog: fixed typo in bug number 61261 -> 861261 (Closes: 861261) 

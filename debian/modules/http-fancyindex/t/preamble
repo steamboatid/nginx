@@ -3,7 +3,7 @@
 # preamble
 # Copyright (C) 2016 Adrian Perez <aperez@igalia.com>
 #
-# Distributed under terms of the MIT license.
+# SPDX-License-Identifier: BSD-2-Clause
 #
 
 function nginx_conf_generate () {
@@ -37,8 +37,16 @@ function nginx_conf_generate () {
 readonly NGINX_CONF="${PREFIX}/conf/nginx.conf"
 readonly NGINX_PID="${PREFIX}/logs/nginx.pid"
 
-NGINX_PORT=$(ss -4Htnl | awk '{ sub("[^:]+:", "", $4) ; seen[$4]=1 }
-END { p=1025 ; while (seen[p]) p++; print p}')
+case $(uname -s) in
+	Darwin)
+		NGINX_PORT=$(netstat -a -n -finet -ptcp | awk '/LISTEN/ { sub(".+\\.", "", $4) ; seen[$4]=1 }
+			END { p=1025 ; while (seen[p]) p++; print p}')
+		;;
+	*)
+		NGINX_PORT=$(ss -4Htnl | awk '{ sub("[^:]+:", "", $4) ; seen[$4]=1 }
+			END { p=1025 ; while (seen[p]) p++; print p}')
+		;;
+esac
 readonly NGINX_PORT
 
 rm -f "${NGINX_CONF}" "${NGINX_PID}"
@@ -82,6 +90,11 @@ function nginx_start () {
 	if [[ $# -gt 0 || ! -r ${NGINX_CONF} ]] ; then nginx_conf "$@" ; fi
 	nginx_stop  # Ensure that it is not running.
 	nginx
+	local n=0
+	while [[ ! -r ${NGINX_PID} && n -lt 20 ]] ; do
+		sleep 0.1  # Wait until pid exists.
+		n=$((n+1))
+	done
 }
 
 function fetch () {

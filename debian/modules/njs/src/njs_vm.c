@@ -12,6 +12,7 @@ static njs_int_t njs_vm_init(njs_vm_t *vm);
 static njs_int_t njs_vm_handle_events(njs_vm_t *vm);
 
 
+const njs_str_t  njs_entry_empty =          njs_str("");
 const njs_str_t  njs_entry_main =           njs_str("main");
 const njs_str_t  njs_entry_module =         njs_str("module");
 const njs_str_t  njs_entry_native =         njs_str("native");
@@ -25,6 +26,7 @@ njs_vm_opt_init(njs_vm_opt_t *options)
     njs_memzero(options, sizeof(njs_vm_opt_t));
 
     options->log_level = NJS_LOG_LEVEL_INFO;
+    options->max_stack_size = NJS_MAX_STACK_SIZE;
 }
 
 
@@ -69,6 +71,8 @@ njs_vm_create(njs_vm_opt_t *options)
     }
 
     vm->external = options->external;
+
+    vm->spare_stack_size = options->max_stack_size;
 
     vm->trace.level = NJS_LEVEL_TRACE;
     vm->trace.size = 2048;
@@ -299,7 +303,6 @@ njs_vm_compile_module(njs_vm_t *vm, njs_str_t *name, u_char **start,
     lambda->declarations = (arr != NULL) ? arr->start : NULL;
     lambda->ndeclarations = (arr != NULL) ? arr->items : 0;
 
-    module->function.args_offset = 1;
     module->function.u.lambda = lambda;
 
     return module;
@@ -578,8 +581,8 @@ njs_vm_handle_events(njs_vm_t *vm)
         }
 
         if (njs_vm_unhandled_rejection(vm)) {
-            ret = njs_value_to_string(vm, &string,
-                                      &vm->promise_reason->start[0]);
+            njs_value_assign(&string, &vm->promise_reason->start[0]);
+            ret = njs_value_to_string(vm, &string, &string);
             if (njs_slow_path(ret != NJS_OK)) {
                 return ret;
             }
@@ -833,14 +836,14 @@ njs_vm_function(njs_vm_t *vm, const njs_str_t *path)
 uint16_t
 njs_vm_prop_magic16(njs_object_prop_t *prop)
 {
-    return prop->value.data.magic16;
+    return njs_prop_magic16(prop);
 }
 
 
 uint32_t
 njs_vm_prop_magic32(njs_object_prop_t *prop)
 {
-    return prop->value.data.magic32;
+    return njs_prop_magic32(prop);
 }
 
 

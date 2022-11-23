@@ -1,0 +1,6 @@
+git@gitlab.com:randompage/aisitsv5.git
+git clone git@github.com:steamboatid/nginx_accept_language_module.git
+
+
+git remote add ups2 https://github.com/hgati/nginx_accept_language_module
+git fetch ups2

@@ -1,0 +1,1227 @@
+From b72c10629a766a8dc7f71c45e7a145f353883088 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Mon, 16 Oct 2017 19:58:23 +0900
+Subject: [PATCH 01/25] changed to format for the Dynamic Module
+
+ its format is different for dynamic modules than for modules being built statically.
+https://www.nginx.com/blog/compiling-dynamic-modules-nginx-plus/
+---
+ config | 26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
+
+diff --git a/config b/config
+index 3d209d5..47ce9ed 100644
+--- a/config
++++ b/config
+@@ -1,20 +1,12 @@
+-ngx_feature=
+-ngx_feature_name=
+-ngx_feature_run=no
+-ngx_feature_incs=
+-ngx_feature_path=
+-ngx_feature_libs=
+-ngx_feature_test=
+-have=NGX_HTTP_HEADERS . auto/have
+-. auto/feature
++ngx_addon_name=ngx_http_accept_language_module
+ 
+-if [ $ngx_found = yes ]; then
+-    ngx_addon_name=ngx_http_accept_language_module
+-    HTTP_MODULES="$HTTP_MODULES ngx_http_accept_language_module"
+-    NGX_ADDON_SRCS="$NGX_ADDON_SRCS ${ngx_addon_dir}/src/ngx_http_accept_language_module.c"
++if test -n "$ngx_module_link"; then
++    ngx_module_type=HTTP
++    ngx_module_name=ngx_http_accept_language_module
++    ngx_module_srcs="$ngx_addon_dir/ngx_http_accept_language_module.c"
++
++    . auto/module
+ else
+-    cat << END
+-$0: error: unable to configure the ngx_http_accept_language_module.
+-END
+-    exit 1
++    HTTP_MODULES="$HTTP_MODULES ngx_http_accept_language_module"
++    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_accept_language_module.c"
+ fi
+
+From b72a8edddc9b35128732a8a50ff42c819d738b01 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Mon, 16 Oct 2017 20:28:15 +0900
+Subject: [PATCH 02/25] Converting a config file
+
+added "src" path.
+this is an old-style config file. The new method uses a build script called auto/module to setup many things so that the new-style configuration can be used with both dynamic and static modules.
+I've test on nginx v1.13.6 with both --add-dynamic-module=/path/to/nginx_accept_language_module-master and --add-module=/path/to/nginx_accept_language_module-master
+It works~
+Reference: https://www.nginx.com/resources/wiki/extending/converting/#converting-a-config-file
+---
+ config | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/config b/config
+index 47ce9ed..e4f1930 100644
+--- a/config
++++ b/config
+@@ -3,10 +3,10 @@ ngx_addon_name=ngx_http_accept_language_module
+ if test -n "$ngx_module_link"; then
+     ngx_module_type=HTTP
+     ngx_module_name=ngx_http_accept_language_module
+-    ngx_module_srcs="$ngx_addon_dir/ngx_http_accept_language_module.c"
++    ngx_module_srcs="$ngx_addon_dir/src/ngx_http_accept_language_module.c"
+ 
+     . auto/module
+ else
+     HTTP_MODULES="$HTTP_MODULES ngx_http_accept_language_module"
+-    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_accept_language_module.c"
++    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/src/ngx_http_accept_language_module.c"
+ fi
+
+From c997cb844a3899fdc2fb712a9cd77269ffabe170 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Mon, 16 Oct 2017 20:43:01 +0900
+Subject: [PATCH 03/25] copy to source root
+
+---
+ ngx_http_accept_language_module.c | 136 ++++++++++++++++++++++++++++++
+ 1 file changed, 136 insertions(+)
+ create mode 100644 ngx_http_accept_language_module.c
+
+diff --git a/ngx_http_accept_language_module.c b/ngx_http_accept_language_module.c
+new file mode 100644
+index 0000000..3f85cc4
+--- /dev/null
++++ b/ngx_http_accept_language_module.c
+@@ -0,0 +1,136 @@
++#include <ngx_config.h>
++#include <ngx_core.h>
++#include <ngx_http.h>
++
++static char *ngx_http_accept_language(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
++static ngx_int_t ngx_http_accept_language_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
++
++static ngx_command_t  ngx_http_accept_language_commands[] = {
++
++    { ngx_string("set_from_accept_language"),
++      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
++      ngx_http_accept_language,
++      NGX_HTTP_MAIN_CONF_OFFSET,
++      0,
++      NULL },
++      ngx_null_command
++};
++
++// No need for any configuration callback
++static ngx_http_module_t  ngx_http_accept_language_module_ctx = {
++    NULL,  NULL, NULL, NULL,  NULL, NULL, NULL, NULL 
++};
++
++ngx_module_t  ngx_http_accept_language_module = {
++    NGX_MODULE_V1,
++    &ngx_http_accept_language_module_ctx,       /* module context */
++    ngx_http_accept_language_commands,          /* module directives */
++    NGX_HTTP_MODULE,                       /* module type */
++    NULL,                                  /* init master */
++    NULL,                                  /* init module */
++    NULL,                                  /* init process */
++    NULL,                                  /* init thread */
++    NULL,                                  /* exit thread */
++    NULL,                                  /* exit process */
++    NULL,                                  /* exit master */
++    NGX_MODULE_V1_PADDING
++};
++
++static char * ngx_http_accept_language(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
++{
++  ngx_uint_t          i;
++  ngx_str_t           *value, *elt, name;
++  ngx_http_variable_t *var;
++  ngx_array_t       *langs_array;
++
++  value = cf->args->elts;
++  name = value[1];
++  
++  if (name.data[0] != '$') {
++      ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "\"%V\" variable name should start with '$'", &name);
++  } else {
++      name.len--;
++      name.data++;
++  }
++  
++  var = ngx_http_add_variable(cf, &name, NGX_HTTP_VAR_CHANGEABLE);
++  if (var == NULL) {
++      return NGX_CONF_ERROR;
++  }
++  if (var->get_handler != NULL) {
++    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "variable already defined: \"%V\"", &name);
++    return NGX_CONF_ERROR;
++  }
++  
++  var->get_handler = ngx_http_accept_language_variable;
++  langs_array = ngx_array_create(cf->pool, cf->args->nelts - 1, sizeof(ngx_str_t));
++  if (langs_array == NULL) {
++    return NGX_CONF_ERROR;
++  }
++  var->data = (uintptr_t) langs_array;
++  
++  for (i = 2; i < cf->args->nelts; i++) {
++    elt = ngx_array_push(langs_array); 
++    if (elt == NULL) {
++      return  NGX_CONF_ERROR;
++    }
++    
++    *elt = value[i];
++  }
++  
++  return NGX_CONF_OK;
++}
++
++static ngx_int_t ngx_http_accept_language_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data) 
++{
++  ngx_uint_t         i = 0;
++  ngx_uint_t         found = 0;
++  u_char            *start, *pos, *end;
++  ngx_array_t       *langs_array = (ngx_array_t *) data;
++  ngx_str_t         *langs = (ngx_str_t *) langs_array->elts;  
++
++  if ( NULL != r->headers_in.accept_language ) {       
++    start = r->headers_in.accept_language->value.data;
++    end = start + r->headers_in.accept_language->value.len;
++
++    while (start < end) {
++      // eating spaces
++      while (start < end && *start == ' ') {start++; }
++      
++      pos = start;
++    
++      while (pos < end && *pos != ',' && *pos != ';') { pos++; }
++    
++      for (i = 0; i < langs_array->nelts; i++)
++      {      
++        if ((ngx_uint_t)(pos - start) >= langs[i].len && ngx_strncasecmp(start, langs[i].data, langs[i].len) == 0) {
++          found = 1;
++          break;
++        }
++      }
++      if (found)
++        break;
++      
++      i = 0; // If not found default to the first language from the list
++    
++      // We discard the quality value
++      if (*pos == ';') {
++        while (pos < end && *pos != ',') {pos++; }
++      }
++      if (*pos == ',') {
++        pos++;
++      }
++      
++      start = pos;
++    }
++  }
++
++  v->data = langs[i].data;
++  v->len  = langs[i].len;
++
++  /* Set all required params */
++  v->valid = 1;
++  v->no_cacheable = 0;
++  v->not_found = 0;
++  return NGX_OK; 
++}
+
+From dda210d42d55c340a156740ee1389d3ea2fce9dc Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Mon, 16 Oct 2017 20:43:30 +0900
+Subject: [PATCH 04/25] Delete ngx_http_accept_language_module.c
+
+---
+ src/ngx_http_accept_language_module.c | 136 --------------------------
+ 1 file changed, 136 deletions(-)
+ delete mode 100644 src/ngx_http_accept_language_module.c
+
+diff --git a/src/ngx_http_accept_language_module.c b/src/ngx_http_accept_language_module.c
+deleted file mode 100644
+index 3f85cc4..0000000
+--- a/src/ngx_http_accept_language_module.c
++++ /dev/null
+@@ -1,136 +0,0 @@
+-#include <ngx_config.h>
+-#include <ngx_core.h>
+-#include <ngx_http.h>
+-
+-static char *ngx_http_accept_language(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+-static ngx_int_t ngx_http_accept_language_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
+-
+-static ngx_command_t  ngx_http_accept_language_commands[] = {
+-
+-    { ngx_string("set_from_accept_language"),
+-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
+-      ngx_http_accept_language,
+-      NGX_HTTP_MAIN_CONF_OFFSET,
+-      0,
+-      NULL },
+-      ngx_null_command
+-};
+-
+-// No need for any configuration callback
+-static ngx_http_module_t  ngx_http_accept_language_module_ctx = {
+-    NULL,  NULL, NULL, NULL,  NULL, NULL, NULL, NULL 
+-};
+-
+-ngx_module_t  ngx_http_accept_language_module = {
+-    NGX_MODULE_V1,
+-    &ngx_http_accept_language_module_ctx,       /* module context */
+-    ngx_http_accept_language_commands,          /* module directives */
+-    NGX_HTTP_MODULE,                       /* module type */
+-    NULL,                                  /* init master */
+-    NULL,                                  /* init module */
+-    NULL,                                  /* init process */
+-    NULL,                                  /* init thread */
+-    NULL,                                  /* exit thread */
+-    NULL,                                  /* exit process */
+-    NULL,                                  /* exit master */
+-    NGX_MODULE_V1_PADDING
+-};
+-
+-static char * ngx_http_accept_language(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+-{
+-  ngx_uint_t          i;
+-  ngx_str_t           *value, *elt, name;
+-  ngx_http_variable_t *var;
+-  ngx_array_t       *langs_array;
+-
+-  value = cf->args->elts;
+-  name = value[1];
+-  
+-  if (name.data[0] != '$') {
+-      ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "\"%V\" variable name should start with '$'", &name);
+-  } else {
+-      name.len--;
+-      name.data++;
+-  }
+-  
+-  var = ngx_http_add_variable(cf, &name, NGX_HTTP_VAR_CHANGEABLE);
+-  if (var == NULL) {
+-      return NGX_CONF_ERROR;
+-  }
+-  if (var->get_handler != NULL) {
+-    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "variable already defined: \"%V\"", &name);
+-    return NGX_CONF_ERROR;
+-  }
+-  
+-  var->get_handler = ngx_http_accept_language_variable;
+-  langs_array = ngx_array_create(cf->pool, cf->args->nelts - 1, sizeof(ngx_str_t));
+-  if (langs_array == NULL) {
+-    return NGX_CONF_ERROR;
+-  }
+-  var->data = (uintptr_t) langs_array;
+-  
+-  for (i = 2; i < cf->args->nelts; i++) {
+-    elt = ngx_array_push(langs_array); 
+-    if (elt == NULL) {
+-      return  NGX_CONF_ERROR;
+-    }
+-    
+-    *elt = value[i];
+-  }
+-  
+-  return NGX_CONF_OK;
+-}
+-
+-static ngx_int_t ngx_http_accept_language_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data) 
+-{
+-  ngx_uint_t         i = 0;
+-  ngx_uint_t         found = 0;
+-  u_char            *start, *pos, *end;
+-  ngx_array_t       *langs_array = (ngx_array_t *) data;
+-  ngx_str_t         *langs = (ngx_str_t *) langs_array->elts;  
+-
+-  if ( NULL != r->headers_in.accept_language ) {       
+-    start = r->headers_in.accept_language->value.data;
+-    end = start + r->headers_in.accept_language->value.len;
+-
+-    while (start < end) {
+-      // eating spaces
+-      while (start < end && *start == ' ') {start++; }
+-      
+-      pos = start;
+-    
+-      while (pos < end && *pos != ',' && *pos != ';') { pos++; }
+-    
+-      for (i = 0; i < langs_array->nelts; i++)
+-      {      
+-        if ((ngx_uint_t)(pos - start) >= langs[i].len && ngx_strncasecmp(start, langs[i].data, langs[i].len) == 0) {
+-          found = 1;
+-          break;
+-        }
+-      }
+-      if (found)
+-        break;
+-      
+-      i = 0; // If not found default to the first language from the list
+-    
+-      // We discard the quality value
+-      if (*pos == ';') {
+-        while (pos < end && *pos != ',') {pos++; }
+-      }
+-      if (*pos == ',') {
+-        pos++;
+-      }
+-      
+-      start = pos;
+-    }
+-  }
+-
+-  v->data = langs[i].data;
+-  v->len  = langs[i].len;
+-
+-  /* Set all required params */
+-  v->valid = 1;
+-  v->no_cacheable = 0;
+-  v->not_found = 0;
+-  return NGX_OK; 
+-}
+
+From e8e26b553166fb95321c136bc39be66776b3dc75 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Mon, 16 Oct 2017 20:44:20 +0900
+Subject: [PATCH 05/25] fixed a path
+
+---
+ config | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/config b/config
+index e4f1930..47ce9ed 100644
+--- a/config
++++ b/config
+@@ -3,10 +3,10 @@ ngx_addon_name=ngx_http_accept_language_module
+ if test -n "$ngx_module_link"; then
+     ngx_module_type=HTTP
+     ngx_module_name=ngx_http_accept_language_module
+-    ngx_module_srcs="$ngx_addon_dir/src/ngx_http_accept_language_module.c"
++    ngx_module_srcs="$ngx_addon_dir/ngx_http_accept_language_module.c"
+ 
+     . auto/module
+ else
+     HTTP_MODULES="$HTTP_MODULES ngx_http_accept_language_module"
+-    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/src/ngx_http_accept_language_module.c"
++    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_accept_language_module.c"
+ fi
+
+From bd647253f79b02034af15ee1ddb09819574f95a9 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Mon, 16 Oct 2017 22:28:18 +0900
+Subject: [PATCH 06/25] Update README.textile
+
+---
+ README.textile | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/README.textile b/README.textile
+index ae5c09c..79a073e 100644
+--- a/README.textile
++++ b/README.textile
+@@ -1,4 +1,6 @@
+-h1. Nginx Accept Language module
++h1. Nginx Accept Language module for dynimic module and static module
++
++This module did a test with nginx v1.13.6 mainline.
+ 
+ This module parses the Accept-Language header and gives the most suitable locale for the user from a list of supported locales from your website.
+ 
+@@ -50,4 +52,4 @@ Send Bugs to Guillaume Maury (dev@gom-jabbar.org)
+ 
+ h3. Acknowledgement
+ 
+-Thanks to Evan Miller for his guide on writing nginx modules (http://emiller.info/nginx-modules-guide.html)
+\ No newline at end of file
++Thanks to Evan Miller for his guide on writing nginx modules (http://emiller.info/nginx-modules-guide.html)
+
+From 36c45ad79bdcdef506e7b566db8486e1252bf602 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Mon, 16 Oct 2017 22:30:13 +0900
+Subject: [PATCH 07/25] Update README.textile
+
+---
+ README.textile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/README.textile b/README.textile
+index 79a073e..47e10b0 100644
+--- a/README.textile
++++ b/README.textile
+@@ -1,4 +1,4 @@
+-h1. Nginx Accept Language module for dynimic module and static module
++h1. Nginx Accept Language module for dynimic or static module
+ 
+ This module did a test with nginx v1.13.6 mainline.
+ 
+
+From d8d99226575948e253ee6ca819e0a7a3c2c4a5af Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Mon, 16 Oct 2017 22:33:23 +0900
+Subject: [PATCH 08/25] Update README.textile
+
+---
+ README.textile | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/README.textile b/README.textile
+index 47e10b0..9e425c2 100644
+--- a/README.textile
++++ b/README.textile
+@@ -1,6 +1,4 @@
+-h1. Nginx Accept Language module for dynimic or static module
+-
+-This module did a test with nginx v1.13.6 mainline.
++h1. Nginx Accept Language module
+ 
+ This module parses the Accept-Language header and gives the most suitable locale for the user from a list of supported locales from your website.
+ 
+
+From 66583f256a0b8d398c6ee5ce3b68a2bfda681cc2 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:01:19 +0900
+Subject: [PATCH 09/25] Update README.textile
+
+---
+ README.textile | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/README.textile b/README.textile
+index 9e425c2..37df828 100644
+--- a/README.textile
++++ b/README.textile
+@@ -2,6 +2,53 @@ h1. Nginx Accept Language module
+ 
+ This module parses the Accept-Language header and gives the most suitable locale for the user from a list of supported locales from your website.
+ 
++THIS MODULE IS FOR DYNIMIC MODULE NOT STATIC MODULE ! 
++
++IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_module
++
++h3. Install
++
++``` sh
++cd /tmp
++wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
++unzip master.zip
++rm -f master.zip
++```
++
++``` sh
++NGINX_VERSION=1.13.6
++cd /tmp
++wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
++tar xvzf /tmp/nginx-${NGINX_VERSION}.tar.gz
++cd nginx-${NGINX_VERSION}
++
++./configure \
++  --prefix=/etc/nginx \
++  --sbin-path=/usr/sbin/nginx \
++  --modules-path=/usr/lib/nginx/modules \
++  --conf-path=/etc/nginx/nginx.conf \
++  --pid-path=/var/run/nginx.pid \
++  --lock-path=/var/run/nginx.lock \
++  --http-log-path=/var/log/nginx/access.log \
++  --error-log-path=/var/log/nginx/error.log \
++  --with-pcre-jit \
++  --with-http_ssl_module \
++  --with-http_realip_module \
++  --with-stream_ssl_module \
++  --with-stream_realip_module \
++  --with-http_stub_status_module \
++  --with-http_gzip_static_module \
++  --with-http_v2_module \
++  --with-http_auth_request_module \
++  --with-http_geoip_module \
++  --with-compat \
++  --add-dynamic-module=/tmp/nginx_accept_language_module-master
++
++make -j$(getconf _NPROCESSORS_ONLN)
++make install
++ln -s /usr/lib/nginx/modules /etc/nginx/modules
++```
++
+ h3. Syntax
+ 
+   set_from_accept_language $lang en ja pl;
+
+From 73a9aa4e160efe0ccd46d61f8f607cf97459f05d Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:01:52 +0900
+Subject: [PATCH 10/25] Update README.textile
+
+---
+ README.textile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/README.textile b/README.textile
+index 37df828..f03004e 100644
+--- a/README.textile
++++ b/README.textile
+@@ -8,14 +8,14 @@ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_m
+ 
+ h3. Install
+ 
+-``` sh
++```sh
+ cd /tmp
+ wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
+ unzip master.zip
+ rm -f master.zip
+ ```
+ 
+-``` sh
++```sh
+ NGINX_VERSION=1.13.6
+ cd /tmp
+ wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
+
+From 44f09034f53bc862026ffb64c5daf12b6ae53151 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:02:19 +0900
+Subject: [PATCH 11/25] Update README.textile
+
+---
+ README.textile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/README.textile b/README.textile
+index f03004e..310b63c 100644
+--- a/README.textile
++++ b/README.textile
+@@ -8,14 +8,14 @@ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_m
+ 
+ h3. Install
+ 
+-```sh
++```
+ cd /tmp
+ wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
+ unzip master.zip
+ rm -f master.zip
+ ```
+ 
+-```sh
++```
+ NGINX_VERSION=1.13.6
+ cd /tmp
+ wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
+
+From d4dfdedd2811bc86bdb25aa5ab3fa39f02ec6544 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:03:18 +0900
+Subject: [PATCH 12/25] Update README.textile
+
+---
+ README.textile | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/README.textile b/README.textile
+index 310b63c..d503173 100644
+--- a/README.textile
++++ b/README.textile
+@@ -8,14 +8,14 @@ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_m
+ 
+ h3. Install
+ 
+-```
++<code>
+ cd /tmp
+ wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
+ unzip master.zip
+ rm -f master.zip
+-```
++</code>
+ 
+-```
++<code>
+ NGINX_VERSION=1.13.6
+ cd /tmp
+ wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
+@@ -47,7 +47,7 @@ cd nginx-${NGINX_VERSION}
+ make -j$(getconf _NPROCESSORS_ONLN)
+ make install
+ ln -s /usr/lib/nginx/modules /etc/nginx/modules
+-```
++</code>
+ 
+ h3. Syntax
+ 
+
+From 7295e6155506fd6801e6f16908fa6873874dfc8f Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:05:56 +0900
+Subject: [PATCH 13/25] Update README.textile
+
+---
+ README.textile | 38 ++++++++++++++++++--------------------
+ 1 file changed, 18 insertions(+), 20 deletions(-)
+
+diff --git a/README.textile b/README.textile
+index d503173..7c32d67 100644
+--- a/README.textile
++++ b/README.textile
+@@ -8,21 +8,20 @@ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_m
+ 
+ h3. Install
+ 
+-<code>
+-cd /tmp
+-wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
+-unzip master.zip
+-rm -f master.zip
+-</code>
+-
+-<code>
+-NGINX_VERSION=1.13.6
+-cd /tmp
+-wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
+-tar xvzf /tmp/nginx-${NGINX_VERSION}.tar.gz
+-cd nginx-${NGINX_VERSION}
+-
+-./configure \
++<pre>
++$ cd /tmp
++$ wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
++$ unzip master.zip
++$ rm -f master.zip
++</pre>
++
++<pre>
++$ NGINX_VERSION=1.13.6
++$ cd /tmp
++$ wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
++$ tar xvzf /tmp/nginx-${NGINX_VERSION}.tar.gz
++$ cd nginx-${NGINX_VERSION}
++$ ./configure \
+   --prefix=/etc/nginx \
+   --sbin-path=/usr/sbin/nginx \
+   --modules-path=/usr/lib/nginx/modules \
+@@ -43,11 +42,10 @@ cd nginx-${NGINX_VERSION}
+   --with-http_geoip_module \
+   --with-compat \
+   --add-dynamic-module=/tmp/nginx_accept_language_module-master
+-
+-make -j$(getconf _NPROCESSORS_ONLN)
+-make install
+-ln -s /usr/lib/nginx/modules /etc/nginx/modules
+-</code>
++$ make -j$(getconf _NPROCESSORS_ONLN)
++$ make install
++$ ln -s /usr/lib/nginx/modules /etc/nginx/modules
++</pre>
+ 
+ h3. Syntax
+ 
+
+From 2a7aa01fddfebf509398fffb0b8e63b1fb8c904c Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:11:22 +0900
+Subject: [PATCH 14/25] Update README.textile
+
+---
+ README.textile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/README.textile b/README.textile
+index 7c32d67..32261ae 100644
+--- a/README.textile
++++ b/README.textile
+@@ -2,7 +2,7 @@ h1. Nginx Accept Language module
+ 
+ This module parses the Accept-Language header and gives the most suitable locale for the user from a list of supported locales from your website.
+ 
+-THIS MODULE IS FOR DYNIMIC MODULE NOT STATIC MODULE ! 
++THIS MODULE IS <b>FOR DYNIMIC MODULE</b> NOT STATIC MODULE ! 
+ 
+ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_module
+ 
+
+From 338ec7120729215054bb5fd8a0c0677420cd95c7 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:12:06 +0900
+Subject: [PATCH 15/25] Update README.textile
+
+---
+ README.textile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/README.textile b/README.textile
+index 32261ae..32dae46 100644
+--- a/README.textile
++++ b/README.textile
+@@ -2,7 +2,7 @@ h1. Nginx Accept Language module
+ 
+ This module parses the Accept-Language header and gives the most suitable locale for the user from a list of supported locales from your website.
+ 
+-THIS MODULE IS <b>FOR DYNIMIC MODULE</b> NOT STATIC MODULE ! 
++THIS MODULE IS <font color="red"><b>FOR DYNIMIC MODULE</b></font> NOT STATIC MODULE ! 
+ 
+ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_module
+ 
+
+From 6824651a6cd57b60f02f0414f3a91c53d21f338c Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:22:53 +0900
+Subject: [PATCH 16/25] Update README.textile
+
+---
+ README.textile | 44 +++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 43 insertions(+), 1 deletion(-)
+
+diff --git a/README.textile b/README.textile
+index 32dae46..e96835f 100644
+--- a/README.textile
++++ b/README.textile
+@@ -2,12 +2,13 @@ h1. Nginx Accept Language module
+ 
+ This module parses the Accept-Language header and gives the most suitable locale for the user from a list of supported locales from your website.
+ 
+-THIS MODULE IS <font color="red"><b>FOR DYNIMIC MODULE</b></font> NOT STATIC MODULE ! 
++THIS MODULE IS <b>FOR DYNIMIC MODULE</b> NOT STATIC MODULE ! 
+ 
+ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_module
+ 
+ h3. Install
+ 
++extract module's source.
+ <pre>
+ $ cd /tmp
+ $ wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
+@@ -15,6 +16,7 @@ $ unzip master.zip
+ $ rm -f master.zip
+ </pre>
+ 
++nginx compile with module's source the above.
+ <pre>
+ $ NGINX_VERSION=1.13.6
+ $ cd /tmp
+@@ -47,6 +49,46 @@ $ make install
+ $ ln -s /usr/lib/nginx/modules /etc/nginx/modules
+ </pre>
+ 
++nginx.conf
++<pre>
++load_module "modules/ngx_http_accept_language_module.so";
++
++http {
++
++  ##
++  # Nomalize to a variable $lang from webbrowser's Accept_Language header
++  ##
++  map $http_accept_language $lang {
++    default en;
++    ~ko ko; ~ru ru; ~ar ar; ~bg bg; ~ca ca; ~cs cs; ~da da; ~de de;
++    ~el el; ~es es; ~fi fi; ~fy fy; ~fr fr; ~gl gl; ~hu hu; ~id id; ~it it; ~ja ja;
++    ~nb nb; ~nl nl; ~pl pl; ~pt-br pt-br; ~pt-pt pt-pt; ~ro ro; ~sv sv; ~tr tr; ~uk uk;
++    ~zh-hans zh-hans; ~zh-hant zh-hant; ~zh-cn zh-cn;
++  }
++
++}
++</pre>
++
++virtualhost.conf
++<pre>
++server {
++
++  listen   80;
++  server_name www.example.com;
++
++  root /etc/nginx/html;
++
++  if ($lang ~ (?i)ja) { 
++    return 404;
++  }
++  
++  if ($lang ~ ^$) {
++    return 404;
++  }
++  
++}
++</pre>
++
+ h3. Syntax
+ 
+   set_from_accept_language $lang en ja pl;
+
+From 102d0651a1bdb9f228bd53fb89b2a5ab884ec8a0 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:24:01 +0900
+Subject: [PATCH 17/25] Update README.textile
+
+---
+ README.textile | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/README.textile b/README.textile
+index e96835f..4c97325 100644
+--- a/README.textile
++++ b/README.textile
+@@ -55,9 +55,6 @@ load_module "modules/ngx_http_accept_language_module.so";
+ 
+ http {
+ 
+-  ##
+-  # Nomalize to a variable $lang from webbrowser's Accept_Language header
+-  ##
+   map $http_accept_language $lang {
+     default en;
+     ~ko ko; ~ru ru; ~ar ar; ~bg bg; ~ca ca; ~cs cs; ~da da; ~de de;
+
+From 4ab3df86b85122825acd09a39d843580a478342b Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 19:25:45 +0900
+Subject: [PATCH 18/25] Update README.textile
+
+---
+ README.textile | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/README.textile b/README.textile
+index 4c97325..3fd68b6 100644
+--- a/README.textile
++++ b/README.textile
+@@ -54,7 +54,7 @@ nginx.conf
+ load_module "modules/ngx_http_accept_language_module.so";
+ 
+ http {
+-
++  
+   map $http_accept_language $lang {
+     default en;
+     ~ko ko; ~ru ru; ~ar ar; ~bg bg; ~ca ca; ~cs cs; ~da da; ~de de;
+@@ -62,19 +62,19 @@ http {
+     ~nb nb; ~nl nl; ~pl pl; ~pt-br pt-br; ~pt-pt pt-pt; ~ro ro; ~sv sv; ~tr tr; ~uk uk;
+     ~zh-hans zh-hans; ~zh-hant zh-hant; ~zh-cn zh-cn;
+   }
+-
++  
+ }
+ </pre>
+ 
+ virtualhost.conf
+ <pre>
+ server {
+-
++  
+   listen   80;
+   server_name www.example.com;
+-
++  
+   root /etc/nginx/html;
+-
++  
+   if ($lang ~ (?i)ja) { 
+     return 404;
+   }
+
+From 074bb495e467c7d48034456401e1a3771e394db6 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 20:53:10 +0900
+Subject: [PATCH 19/25] Update and rename README.textile to README.md
+
+---
+ README.textile => README.md | 74 ++++++-------------------------------
+ 1 file changed, 12 insertions(+), 62 deletions(-)
+ rename README.textile => README.md (53%)
+
+diff --git a/README.textile b/README.md
+similarity index 53%
+rename from README.textile
+rename to README.md
+index 3fd68b6..6f5af8d 100644
+--- a/README.textile
++++ b/README.md
+@@ -9,15 +9,15 @@ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_m
+ h3. Install
+ 
+ extract module's source.
+-<pre>
+-$ cd /tmp
+-$ wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
+-$ unzip master.zip
+-$ rm -f master.zip
+-</pre>
++```sh
++cd /tmp
++wget https://github.com/hgati/nginx_accept_language_module/archive/master.zip
++unzip master.zip
++rm -f master.zip
++```
+ 
+ nginx compile with module's source the above.
+-<pre>
++```sh
+ $ NGINX_VERSION=1.13.6
+ $ cd /tmp
+ $ wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
+@@ -47,10 +47,10 @@ $ ./configure \
+ $ make -j$(getconf _NPROCESSORS_ONLN)
+ $ make install
+ $ ln -s /usr/lib/nginx/modules /etc/nginx/modules
+-</pre>
++```
+ 
+ nginx.conf
+-<pre>
++```sh
+ load_module "modules/ngx_http_accept_language_module.so";
+ 
+ http {
+@@ -64,10 +64,10 @@ http {
+   }
+   
+ }
+-</pre>
++```
+ 
+ virtualhost.conf
+-<pre>
++```sh
+ server {
+   
+   listen   80;
+@@ -84,54 +84,4 @@ server {
+   }
+   
+ }
+-</pre>
+-
+-h3. Syntax
+-
+-  set_from_accept_language $lang en ja pl;
+- -  `$lang` is the variable in which to store the locale
+- -  `en ja pl` are the locales supported by your website
+-  
+-If none of the locales from accept_language is available on your website, it sets the variable to the first locale of your website's supported locales (in this case en)
+-  
+-h4. Caveat
+-
+-It currently assumes that the accept-language is sorted by quality values (from my tests it's the case for safari, firefox, opera and ie) and discards q (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html). In the situation where I'm using the module, this assumption works... but buyer beware :-)
+-
+-h3. Example configuration
+-
+-If you have different subdomains for each languages
+-<code>
+-server {
+-    listen 80;
+-    server_name your_domain.com;
+-    set_from_accept_language $lang en ja zh;
+-    rewrite ^/(.*) http://$lang.your_domain.com redirect;
+-}
+-</code>
+-
+-Or you could do something like this, redirecting people coming to '/' to /en (or /pt)
+-
+-<code>
+-location / {
+-    set_from_accept_language $lang pt en;
+-     if ( $request_uri ~ ^/$ ) {
+-       rewrite ^/$ /$lang redirect;
+-       break;
+-     }
+-}
+-</code>
+-
+-
+-h3. Why did I create it? 
+-
+-I'm using page caching with merb on a multi-lingual website and I needed a way to serve the correct language page from the cache
+-I'll soon put an example on http://gom-jabbar.org
+-
+-h3. Bugs
+-
+-Send Bugs to Guillaume Maury (dev@gom-jabbar.org)
+-
+-h3. Acknowledgement
+-
+-Thanks to Evan Miller for his guide on writing nginx modules (http://emiller.info/nginx-modules-guide.html)
++```
+
+From 0b9c5fe3042406e547798b063f31e4b3459ce3f5 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 20:54:09 +0900
+Subject: [PATCH 20/25] Update README.md
+
+---
+ README.md | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/README.md b/README.md
+index 6f5af8d..5a5a15a 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-h1. Nginx Accept Language module
++# Nginx Accept Language module
+ 
+ This module parses the Accept-Language header and gives the most suitable locale for the user from a list of supported locales from your website.
+ 
+@@ -6,7 +6,7 @@ THIS MODULE IS <b>FOR DYNIMIC MODULE</b> NOT STATIC MODULE !
+ 
+ IF YOU WANT A STATIC MODULE, USE https://github.com/giom/nginx_accept_language_module
+ 
+-h3. Install
++### Install
+ 
+ extract module's source.
+ ```sh
+@@ -18,12 +18,12 @@ rm -f master.zip
+ 
+ nginx compile with module's source the above.
+ ```sh
+-$ NGINX_VERSION=1.13.6
+-$ cd /tmp
+-$ wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
+-$ tar xvzf /tmp/nginx-${NGINX_VERSION}.tar.gz
+-$ cd nginx-${NGINX_VERSION}
+-$ ./configure \
++NGINX_VERSION=1.13.6
++cd /tmp
++wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
++tar xvzf /tmp/nginx-${NGINX_VERSION}.tar.gz
++cd nginx-${NGINX_VERSION}
++./configure \
+   --prefix=/etc/nginx \
+   --sbin-path=/usr/sbin/nginx \
+   --modules-path=/usr/lib/nginx/modules \
+@@ -44,9 +44,9 @@ $ ./configure \
+   --with-http_geoip_module \
+   --with-compat \
+   --add-dynamic-module=/tmp/nginx_accept_language_module-master
+-$ make -j$(getconf _NPROCESSORS_ONLN)
+-$ make install
+-$ ln -s /usr/lib/nginx/modules /etc/nginx/modules
++make -j$(getconf _NPROCESSORS_ONLN)
++make install
++ln -s /usr/lib/nginx/modules /etc/nginx/modules
+ ```
+ 
+ nginx.conf
+
+From a6fc578aeebf1e1a2f56e0d3caf52fffcaeb1588 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 20:55:26 +0900
+Subject: [PATCH 21/25] Update README.md
+
+---
+ README.md | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/README.md b/README.md
+index 5a5a15a..0c58937 100644
+--- a/README.md
++++ b/README.md
+@@ -76,11 +76,11 @@ server {
+   root /etc/nginx/html;
+   
+   if ($lang ~ (?i)ja) { 
+-    return 404;
++    return 302 http://www.lelong.com.my;
+   }
+   
+   if ($lang ~ ^$) {
+-    return 404;
++    return 302 http://www.lelong.com.my;
+   }
+   
+ }
+
+From b7d548802122d413de3a24241eeed65b556d9f01 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 20:56:06 +0900
+Subject: [PATCH 22/25] Update README.md
+
+---
+ README.md | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/README.md b/README.md
+index 0c58937..00f5b36 100644
+--- a/README.md
++++ b/README.md
+@@ -85,3 +85,7 @@ server {
+   
+ }
+ ```
++
++### Usage
++
++https://github.com/giom/nginx_accept_language_module
+
+From 96c512799619f2696f8b89a1221d0e63c93e3ec7 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Thu, 9 Nov 2017 20:57:41 +0900
+Subject: [PATCH 23/25] Update README.md
+
+---
+ README.md | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/README.md b/README.md
+index 00f5b36..d2ad8b9 100644
+--- a/README.md
++++ b/README.md
+@@ -42,6 +42,7 @@ cd nginx-${NGINX_VERSION}
+   --with-http_v2_module \
+   --with-http_auth_request_module \
+   --with-http_geoip_module \
++  # for dynimic module
+   --with-compat \
+   --add-dynamic-module=/tmp/nginx_accept_language_module-master
+ make -j$(getconf _NPROCESSORS_ONLN)
+
+From ff3a6d32c83a550b1213b02823e2b1c28b3ed764 Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Tue, 30 Jan 2018 22:05:32 +0900
+Subject: [PATCH 24/25] Update README.md
+
+---
+ README.md | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/README.md b/README.md
+index d2ad8b9..38543e9 100644
+--- a/README.md
++++ b/README.md
+@@ -56,13 +56,7 @@ load_module "modules/ngx_http_accept_language_module.so";
+ 
+ http {
+   
+-  map $http_accept_language $lang {
+-    default en;
+-    ~ko ko; ~ru ru; ~ar ar; ~bg bg; ~ca ca; ~cs cs; ~da da; ~de de;
+-    ~el el; ~es es; ~fi fi; ~fy fy; ~fr fr; ~gl gl; ~hu hu; ~id id; ~it it; ~ja ja;
+-    ~nb nb; ~nl nl; ~pl pl; ~pt-br pt-br; ~pt-pt pt-pt; ~ro ro; ~sv sv; ~tr tr; ~uk uk;
+-    ~zh-hans zh-hans; ~zh-hant zh-hant; ~zh-cn zh-cn;
+-  }
++  set_from_accept_language $lang en ko ru ar bg ca cs da de el es fi fy fr gl hu id it ja nb nl pl pt-br pt-pt ro sv tr uk zh-hans zh-hant zh-cn;
+   
+ }
+ ```
+
+From 5e5bb985012a19a397667796785c37eaf4987c3e Mon Sep 17 00:00:00 2001
+From: hgati <hgati@users.noreply.github.com>
+Date: Tue, 30 Jan 2018 22:06:40 +0900
+Subject: [PATCH 25/25] Update README.md
+
+---
+ README.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index 38543e9..544586a 100644
+--- a/README.md
++++ b/README.md
+@@ -16,7 +16,7 @@ unzip master.zip
+ rm -f master.zip
+ ```
+ 
+-nginx compile with module's source the above.
++nginx compile with module's source
+ ```sh
+ NGINX_VERSION=1.13.6
+ cd /tmp

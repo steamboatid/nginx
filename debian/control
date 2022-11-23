@@ -245,7 +245,6 @@ Depends: libnginx-mod-http-accept-language (= ${binary:Version}),
          libnginx-mod-http-subs-filter (= ${binary:Version}),
          libnginx-mod-http-sysguard (= ${binary:Version}),
          libnginx-mod-http-testcookie-access (= ${binary:Version}),
-         libnginx-mod-http-uploadprogress (= ${binary:Version}),
          libnginx-mod-http-upstream-check (= ${binary:Version}),
          libnginx-mod-http-upstream-fair (= ${binary:Version}),
          libnginx-mod-http-sticky (= ${binary:Version}),
@@ -295,7 +294,7 @@ Description: nginx web/proxy server (extended version)
  OPTIONAL STREAM MODULES: Stream, GeoIP, GeoIP2
  .
  THIRD PARTY MODULES: Auth PAM, Cache Purge, DAV Ext, Echo, Fancy Index,
- GeoIP2, Headers More, Embedded Lua, HTTP Substitutions, Nchan, Upload Progress,
+ GeoIP2, Headers More, Embedded Lua, HTTP Substitutions, Nchan, 
  Upstream Fair Queue.
 
 Package: nginx-static
@@ -587,21 +586,6 @@ Description: Fancy indexes module for the Nginx
  The Fancy Index module makes possible the generation of file listings, like
  the built-in autoindex module does, but adding a touch of style by introducing
  ways to customize the result.
-
-Package: libnginx-mod-http-uploadprogress
-Architecture: any
-Depends: libnginx-mod-http-subs-filter (= ${binary:Version}),
-         libnginx-mod-http-ndk (= ${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends},
-Recommends: nginx,
-Description: Upload progress system for Nginx
- Upload progress module is an implementation of an upload progress system, that
- monitors RFC1867 POST uploads as they are transmitted to upstream servers.
- .
- It works by tracking the uploads proxied by Nginx to upstream servers without
- analysing the uploaded content and offers a web API to report upload progress
- in Javscript, Json or any other format.
 
 Package: libnginx-mod-http-subs-filter
 Architecture: any

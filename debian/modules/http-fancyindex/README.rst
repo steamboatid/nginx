@@ -13,9 +13,9 @@ the built-in `autoindex <http://wiki.nginx.org/NginxHttpAutoindexModule>`__
 module does, but adding a touch of style. This is possible because the module
 allows a certain degree of customization of the generated content:
 
-* Custom headers. Either local or stored remotely.
-* Custom footers. Either local or stored remotely.
-* Add you own CSS style rules.
+* Custom headers, either local or stored remotely.
+* Custom footers, either local or stored remotely.
+* Add your own CSS style rules.
 * Allow choosing to sort elements by name (default), modification time, or
   size; both ascending (default), or descending.
 
@@ -26,22 +26,26 @@ server written by `Igor Sysoev <http://sysoev.ru>`__.
 Requirements
 ============
 
-CentOS 7
-~~~~~~~~
+CentOS, RHEL, Fedora Linux
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For users of the  `official stable <https://www.nginx.com/resources/wiki/start/topics/tutorials/install/>`__  Nginx repository, `extra packages repository with dynamic modules <https://www.getpagespeed.com/redhat>`__ is available and fancyindex is included.
 
-Install directly:: 
+Install repository configuration, then the module package:: 
 
-    yum install https://extras.getpagespeed.com/redhat/7/x86_64/RPMS/nginx-module-fancyindex-1.12.0.0.4.1-1.el7.gps.x86_64.rpm
-
-Alternatively, add extras repository first (for future updates) and install the module::
-
-    yum install nginx-module-fancyindex
+    yum -y install https://extras.getpagespeed.com/release-latest.rpm
+    yum -y install nginx-module-fancyindex
     
 Then load the module in `/etc/nginx/nginx.conf` using::
 
    load_module "modules/ngx_http_fancyindex_module.so";
+
+macOS
+~~~~~
+
+Users can `install Nginx on macOS with MacPorts <https://ports.macports.org/port/nginx>`__; fancyindex is included::
+
+   sudo port install nginx
 
 Other platforms
 ~~~~~~~~~~~~~~~
@@ -113,8 +117,8 @@ achieved using the module:
   `@TheInsomniac <https://github.com/TheInsomniac>`__. Uses custom header and
   footer.
 * `Theme <https://github.com/Naereen/Nginx-Fancyindex-Theme>`__ by
-  `@Naereen <https://github.com/Naereen/>`__. Uses custom header and footer, the
-  header includes search field to filter by filename using JavaScript.
+  `@Naereen <https://github.com/Naereen/>`__. Uses custom header and footer. The
+  header includes a search field to filter by file name using JavaScript.
 * `Theme <https://github.com/fraoustin/Nginx-Fancyindex-Theme>`__ by
   `@fraoustin <https://github.com/fraoustin>`__. Responsive theme using
   Material Design elements.
@@ -168,17 +172,9 @@ fancyindex_exact_size
 :Default: fancyindex_exact_size on
 :Context: http, server, location
 :Description:
-  Defines how to represent file sizes in the directory listing; either
+  Defines how to represent file sizes in the directory listing: either
   accurately, or rounding off to the kilobyte, the megabyte and the
   gigabyte.
-
-fancyindex_name_length
-~~~~~~~~~~~~~~~~~~~~~~
-:Syntax: *fancyindex_name_length length*
-:Default: fancyindex_name_length 50
-:Context: http, server, location
-:Description:
-  Defines the maximum file name length limit in bytes.
 
 fancyindex_footer
 ~~~~~~~~~~~~~~~~~
@@ -189,13 +185,13 @@ fancyindex_footer
   Specifies which file should be inserted at the foot of directory listings.
   If set to an empty string, the default footer supplied by the module will
   be sent. The optional parameter indicates whether the *path* is to be
-  treated as an URI to load using a *subrequest* (the default), or whether
+  treated as a URI to load using a *subrequest* (the default), or whether
   it refers to a *local* file.
 
 .. note:: Using this directive needs the ngx_http_addition_module_ built
    into Nginx.
 
-.. warning:: When inserting custom header/footer a subrequest will be
+.. warning:: When inserting custom a header/footer, a subrequest will be
    issued so potentially any URL can be used as source for them. Although it
    will work with external URLs, only using internal ones is supported.
    External URLs are totally untested and using them will make Nginx_ block
@@ -212,7 +208,7 @@ fancyindex_header
   Specifies which file should be inserted at the head of directory listings.
   If set to an empty string, the default header supplied by the module will
   be sent. The optional parameter indicates whether the *path* is to be
-  treated as an URI to load using a *subrequest* (the default), or whether
+  treated as a URI to load using a *subrequest* (the default), or whether
   it refers to a *local* file.
 
 .. note:: Using this directive needs the ngx_http_addition_module_ built
@@ -224,7 +220,7 @@ fancyindex_show_path
 :Default: fancyindex_show_path on
 :Context: http, server, location
 :Description:
-  Whether to output or not the path and the closing </h1> tag after the header.
+  Whether or not to output the path and the closing </h1> tag after the header.
   This is useful when you want to handle the path displaying with a PHP script
   for example.
 
@@ -237,8 +233,8 @@ fancyindex_show_dotfiles
 :Default: fancyindex_show_dotfiles off
 :Context: http, server, location
 :Description:
-  Whether to list files that are proceeded with a dot. Normal convention is to
-  hide these. 
+  Whether to list files that are preceded with a dot. Normal convention is to
+  hide these.
 
 fancyindex_ignore
 ~~~~~~~~~~~~~~~~~
@@ -246,8 +242,8 @@ fancyindex_ignore
 :Default: No default.
 :Context: http, server, location
 :Description:
-  Specifies a list of file names which will be not be shown in generated
-  listings. If Nginx was built with PCRE support strings are interpreted as
+  Specifies a list of file names which will not be shown in generated
+  listings. If Nginx was built with PCRE support, strings are interpreted as
   regular expressions.
 
 fancyindex_hide_symlinks
@@ -264,7 +260,7 @@ fancyindex_hide_parent_dir
 :Default: fancyindex_hide_parent_dir off
 :Context: http, server, location
 :Description:
-  When enabled, it will not show parent directory.
+  When enabled, it will not show the parent directory.
 
 fancyindex_localtime
 ~~~~~~~~~~~~~~~~~~~~

@@ -9,9 +9,9 @@ mkdir -p $BASEDIR
 cd $BASEDIR
 
 # delete default module
-rm -rf http-auth-pam http-cache-purge http-dav-ext http-echo http-fancyindex \
-http-geoip2 http-headers-more-filter http-ndk http-subs-filter http-uploadprogress \
-http-upstream-fair nchan rtmp
+#rm -rf http-auth-pam http-cache-purge http-dav-ext http-echo http-fancyindex \
+#http-geoip2 http-headers-more-filter http-ndk http-subs-filter http-uploadprogress \
+#http-upstream-fair nchan rtmp
 
 
 apt install -fy git
@@ -134,6 +134,41 @@ update_rename "openresty/redis2-nginx-module" "http-redis2"  >/dev/null 2>&1 &
 # https://github.com/openresty/set-misc-nginx-module
 update_rename "openresty/set-misc-nginx-module" "http-set-misc"  >/dev/null 2>&1 &
 
+
+
+# https://github.com/agentzh/headers-more-nginx-module
+update_rename "agentzh/headers-more-nginx-module" "http-headers-more-filter"  >/dev/null 2>&1 &
+
+# https://github.com/simpl/ngx_devel_kit
+update_rename "simpl/ngx_devel_kit" "http-ndk"  >/dev/null 2>&1 &
+
+# https://github.com/agentzh/echo-nginx-module
+update_rename "agentzh/echo-nginx-module" "http-echo"  >/dev/null 2>&1 &
+
+# https://github.com/gnosek/nginx-upstream-fair
+update_rename "gnosek/nginx-upstream-fair" "http-upstream-fair"  >/dev/null 2>&1 &
+
+# https://github.com/slact/nchan
+update_only "slact/nchan"  >/dev/null 2>&1 &
+
+# https://github.com/masterzen/nginx-upload-progress-module
+update_rename "masterzen/nginx-upload-progress-module" "http-uploadprogress"  >/dev/null 2>&1 &
+
+# https://github.com/FRiCKLE/ngx_cache_purge
+update_rename "FRiCKLE/ngx_cache_purge" "http-cache-purge"  >/dev/null 2>&1 &
+
+# https://github.com/arut/nginx-dav-ext-module
+update_rename "arut/nginx-dav-ext-module" "http-dav-ext"  >/dev/null 2>&1 &
+
+# https://github.com/aperezdc/ngx-fancyindex
+update_rename "aperezdc/ngx-fancyindex" "http-fancyindex"  >/dev/null 2>&1 &
+
+# https://github.com/yaoweibin/ngx_http_substitutions_filter_module
+update_rename "yaoweibin/ngx_http_substitutions_filter_module" "http-subs-filter"  >/dev/null 2>&1 &
+
+# https://github.com/arut/nginx-rtmp-module
+update_rename "arut/nginx-rtmp-module" "rtmp"  >/dev/null 2>&1 &
+
 # https://github.com/kvspb/nginx-auth-ldap
 update_rename "kvspb/nginx-auth-ldap" "http-auth-ldap"  >/dev/null 2>&1 &
 
@@ -161,6 +196,12 @@ update_rename "AirisX/nginx_cookie_flag_module" "http-cookie-flag-filter"  >/dev
 
 # https://github.com/grahamedgecombe/nginx-ct
 update_rename "grahamedgecombe/nginx-ct" "ssl-ct"  >/dev/null 2>&1 &
+
+# https://github.com/leev/ngx_http_geoip2_module
+update_rename "leev/ngx_http_geoip2_module" "http-geoip2"  >/dev/null 2>&1 &
+
+# https://github.com/sto/ngx_http_auth_pam_module
+update_rename "sto/ngx_http_auth_pam_module" "http-auth-pam"  >/dev/null 2>&1 &
 
 # https://github.com/steamboatid/nginx_accept_language_module
 update_rename "steamboatid/nginx_accept_language_module" "http-accept-language"  >/dev/null 2>&1 &
@@ -239,6 +280,6 @@ printf "\n\n --- done \n"
 cd $BASEDIR
 
 # delete default module
-rm -rf http-auth-pam http-cache-purge http-dav-ext http-echo http-fancyindex \
-http-geoip2 http-headers-more-filter http-ndk http-subs-filter http-uploadprogress \
-http-upstream-fair nchan rtmp
+#rm -rf http-auth-pam http-cache-purge http-dav-ext http-echo http-fancyindex \
+#http-geoip2 http-headers-more-filter http-ndk http-subs-filter http-uploadprogress \
+#http-upstream-fair nchan rtmp

@@ -1,6 +1,6 @@
 #!/bin/sh
 ./autogen.sh
-export CFLAGS="-O2 -pg -ansi"
+export CFLAGS="-O3 -pg -ansi"
 ./configure --enable-static --disable-shared
 make clean
 make

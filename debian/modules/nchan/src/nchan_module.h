@@ -34,6 +34,8 @@
 #include <util/nchan_msg.h>
 #include <util/nchan_output.h>
 #include <util/nchan_debug.h>
+#include <util/nchan_stats.h>
+#include <util/nchan_accumulator.h>
 
 extern ngx_pool_t *nchan_pool;
 extern ngx_int_t nchan_worker_processes;
@@ -41,21 +43,20 @@ extern ngx_module_t ngx_nchan_module;
 extern nchan_store_t *nchan_store;
 
 extern int nchan_stub_status_enabled;
+extern int nchan_redis_stats_enabled;
 
 ngx_int_t nchan_stub_status_handler(ngx_http_request_t *r);
 ngx_int_t nchan_pubsub_handler(ngx_http_request_t *r);
 ngx_int_t nchan_group_handler(ngx_http_request_t *r);
 ngx_int_t nchan_subscriber_info_handler(ngx_http_request_t *r);
 ngx_int_t nchan_benchmark_handler(ngx_http_request_t *r);
+ngx_int_t nchan_redis_stats_handler(ngx_http_request_t *r);
 
 time_t nchan_loc_conf_message_timeout(nchan_loc_conf_t *cf);
 ngx_int_t nchan_loc_conf_max_messages(nchan_loc_conf_t *cf);
 
 ngx_int_t nchan_maybe_send_channel_event_message(ngx_http_request_t *, channel_event_type_t);
 
-#define nchan_update_stub_status(counter_name, count) __memstore_update_stub_status(offsetof(nchan_stub_status_t, counter_name), count)
-void __memstore_update_stub_status(off_t offset, int count);
-nchan_stub_status_t *nchan_get_stub_status_stats(void);
 size_t nchan_get_used_shmem(void);
 
 #define nchan_log(level, log, errno, fmt, args...) ngx_log_error(level, log, errno, "nchan: " fmt, ##args)

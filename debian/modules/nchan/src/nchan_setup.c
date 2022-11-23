@@ -64,6 +64,10 @@ static ngx_int_t nchan_init_worker(ngx_cycle_t *cycle) {
     return NGX_OK;
   }
   
+  if(nchan_stats_init_worker(cycle) != NGX_OK) {
+    return NGX_ERROR;
+  }
+  
   if(nchan_store_memory.init_worker(cycle)!=NGX_OK) {
     return NGX_ERROR;
   }
@@ -89,6 +93,10 @@ static ngx_int_t nchan_preconfig(ngx_conf_t *cf) {
 
 static ngx_int_t nchan_postconfig(ngx_conf_t *cf) {
   global_owner_cycle = (void *)ngx_cycle;
+  if(nchan_stats_init_postconfig(cf, nchan_stub_status_enabled) != NGX_OK) {
+    return NGX_ERROR;
+  }
+  
   if(nchan_store_memory.init_postconfig(cf)!=NGX_OK) {
     return NGX_ERROR;
   }
@@ -136,22 +144,69 @@ static void *nchan_create_srv_conf(ngx_conf_t *cf) {
   if(scf == NULL) {
     return NGX_CONF_ERROR;
   }
-  scf->redis.connect_timeout = NGX_CONF_UNSET_MSEC;
-  scf->redis.optimize_target = NCHAN_REDIS_OPTIMIZE_UNSET;
+  scf->redis.retry_commands = NGX_CONF_UNSET;
+  scf->redis.retry_commands_max_wait = NGX_CONF_UNSET_MSEC;
+  scf->redis.node_connect_timeout = NGX_CONF_UNSET_MSEC;
+  scf->redis.cluster_connect_timeout = NGX_CONF_UNSET_MSEC;
+  
+  scf->redis.reconnect_delay = NCHAN_CONF_UNSEC_BACKOFF;
+  scf->redis.cluster_recovery_delay = NCHAN_CONF_UNSEC_BACKOFF;
+  scf->redis.cluster_check_interval = NCHAN_CONF_UNSEC_BACKOFF;
+  scf->redis.idle_channel_ttl = NCHAN_CONF_UNSEC_BACKOFF;
+  
+  scf->redis.idle_channel_ttl_safety_margin = NGX_CONF_UNSET_MSEC;
+  
+  scf->redis.cluster_max_failing_msec = NGX_CONF_UNSET_MSEC;
+  scf->redis.command_timeout = NGX_CONF_UNSET_MSEC;
+  scf->redis.load_scripts_unconditionally = NGX_CONF_UNSET;
+  scf->redis.accurate_subscriber_count = NGX_CONF_UNSET;
   scf->redis.master_weight = NGX_CONF_UNSET;
   scf->redis.slave_weight = NGX_CONF_UNSET;
   scf->redis.blacklist_count = NGX_CONF_UNSET;
   scf->redis.blacklist = NULL;
   scf->redis.tls.enabled = NGX_CONF_UNSET;
   scf->redis.tls.verify_certificate = NGX_CONF_UNSET;
+  
+  scf->redis.stats.enabled = NGX_CONF_UNSET;
+  scf->redis.stats.max_detached_time_sec = NGX_CONF_UNSET;
+  
   scf->upstream_nchan_loc_conf = NULL;
   return scf;
 }
 
 static char *nchan_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child) {
   nchan_srv_conf_t       *prev = parent, *conf = child;
-  ngx_conf_merge_msec_value(conf->redis.connect_timeout, prev->redis.connect_timeout, NCHAN_DEFAULT_REDIS_NODE_CONNECT_TIMEOUT_MSEC);
-  MERGE_UNSET_CONF(conf->redis.optimize_target, prev->redis.optimize_target, NCHAN_REDIS_OPTIMIZE_UNSET, NCHAN_REDIS_OPTIMIZE_CPU);
+  
+  ngx_conf_merge_value(conf->redis.retry_commands, prev->redis.retry_commands, NCHAN_DEFAULT_REDIS_CAN_RETRY_COMMANDS);
+  
+  ngx_conf_merge_msec_value(conf->redis.retry_commands_max_wait, prev->redis.retry_commands_max_wait, NCHAN_DEFAULT_REDIS_RETRY_COMMANDS_MAX_WAIT_MSEC);
+  
+  ngx_conf_merge_msec_value(conf->redis.node_connect_timeout, prev->redis.node_connect_timeout, NCHAN_DEFAULT_REDIS_NODE_CONNECT_TIMEOUT_MSEC);
+  ngx_conf_merge_msec_value(conf->redis.cluster_connect_timeout, prev->redis.cluster_connect_timeout, NCHAN_DEFAULT_REDIS_CLUSTER_CONNECT_TIMEOUT_MSEC);
+  
+  ngx_conf_merge_msec_value(conf->redis.cluster_max_failing_msec, prev->redis.cluster_max_failing_msec, NCHAN_DEFAULT_REDIS_CLUSTER_MAX_FAILING_TIME_MSEC);
+  
+  ngx_conf_merge_msec_value(conf->redis.command_timeout, prev->redis.command_timeout, NCHAN_DEFAULT_REDIS_COMMAND_TIMEOUT_MSEC);
+  
+  nchan_conf_merge_backoff_value(&conf->redis.reconnect_delay, &prev->redis.reconnect_delay, &NCHAN_REDIS_DEFAULT_RECONNECT_DELAY);
+  
+  nchan_conf_merge_backoff_value(&conf->redis.cluster_recovery_delay, &prev->redis.cluster_recovery_delay, &NCHAN_REDIS_DEFAULT_CLUSTER_RECOVERY_DELAY);
+  
+  nchan_conf_merge_backoff_value(&conf->redis.cluster_check_interval, &prev->redis.cluster_check_interval, &NCHAN_REDIS_DEFAULT_CLUSTER_CHECK_INTERVAL);
+
+  nchan_conf_merge_backoff_value(&conf->redis.idle_channel_ttl, &prev->redis.idle_channel_ttl, &NCHAN_REDIS_DEFAULT_IDLE_CHANNEL_TTL);
+  
+  ngx_conf_merge_msec_value(conf->redis.idle_channel_ttl_safety_margin, prev->redis.idle_channel_ttl_safety_margin, NCHAN_REDIS_IDLE_CHANNEL_TTL_SAFETY_MARGIN_MSEC);
+  
+  ngx_conf_merge_value(conf->redis.load_scripts_unconditionally, prev->redis.load_scripts_unconditionally, 0);
+  
+  ngx_conf_merge_value(conf->redis.accurate_subscriber_count, prev->redis.accurate_subscriber_count, 0);
+  
+  ngx_conf_merge_value(conf->redis.stats.enabled, prev->redis.stats.enabled, NGX_CONF_UNSET);
+  //default to unset to enable only if at least 1 stats location is configured
+  
+  ngx_conf_merge_value(conf->redis.stats.max_detached_time_sec, prev->redis.stats.max_detached_time_sec, NCHAN_REDIS_DEFAULT_STATS_MAX_DETACHED_TIME_SEC);
+  
   ngx_conf_merge_value(conf->redis.master_weight, prev->redis.master_weight, 1);
   ngx_conf_merge_value(conf->redis.slave_weight, prev->redis.slave_weight, 1);
   ngx_conf_merge_value(conf->redis.blacklist_count, prev->redis.blacklist_count, 0);
@@ -246,12 +301,12 @@ static void *nchan_create_loc_conf(ngx_conf_t *cf) {
   ngx_memzero(&lcf->redis, sizeof(lcf->redis));
   lcf->redis.url_enabled=NGX_CONF_UNSET;
   lcf->redis.ping_interval = NGX_CONF_UNSET;
-  lcf->redis.cluster_check_interval=NGX_CONF_UNSET;
   lcf->redis.upstream_inheritable=NGX_CONF_UNSET;
   lcf->redis.storage_mode = REDIS_MODE_CONF_UNSET;
   lcf->redis.nostore_fastpublish = NGX_CONF_UNSET;
   lcf->redis.privdata = NULL;
   lcf->redis.nodeset = NULL;
+  lcf->redis.stats.upstream_name = NULL;
   
   lcf->request_handler = NULL;
   
@@ -300,6 +355,10 @@ static int is_group_location(nchan_loc_conf_t *lcf) {
   return lcf->group.get || lcf->group.set || lcf->group.delete;
 }
 
+static int is_redis_stats_location(nchan_loc_conf_t *lcf) {
+  return lcf->redis.stats.upstream_name != NULL;
+}
+
 static int is_valid_location(ngx_conf_t *cf, nchan_loc_conf_t *lcf) {
   
   if(is_group_location(lcf)) {
@@ -314,6 +373,15 @@ static int is_valid_location(ngx_conf_t *cf, nchan_loc_conf_t *lcf) {
     else if(is_sub_location(lcf)) {
       ngx_conf_log_error(NGX_LOG_ERR, cf, 0, "Can't have a subscriber location and also be a group access location (nchan_group + nchan_subscriber)");
       return 0;
+    }
+    else if(is_redis_stats_location(lcf)) {
+      ngx_conf_log_error(NGX_LOG_ERR, cf, 0, "Can't have a redis stats location and also be a group access location (nchan_group + nchan_subscriber)");
+      return 0;
+    }
+  }
+  if(is_redis_stats_location(lcf)) {
+    if (is_group_location(lcf) || is_sub_location(lcf) || is_pub_location(lcf)) {
+      ngx_conf_log_error(NGX_LOG_ERR, cf, 0, "Can't have a redis stats location and also a group, publisher, or subscriber location.");
     }
   }
   return 1;
@@ -390,6 +458,8 @@ static char * nchan_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child) {
   ngx_conf_merge_bitmask_value(conf->group.delete, prev->group.delete, 0);
   
   ngx_conf_merge_value(conf->group.enable_accounting, prev->group.enable_accounting, 0);
+  
+  MERGE_CONF(conf, prev, redis.stats.upstream_name);
   
   //validate location
   if(!is_valid_location(cf, conf)) {
@@ -512,10 +582,6 @@ static char * nchan_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child) {
   if(up)
     ngx_conf_merge_value(conf->redis.ping_interval, up->redis.ping_interval, NGX_CONF_UNSET);
   ngx_conf_merge_value(conf->redis.ping_interval, prev->redis.ping_interval, NCHAN_REDIS_DEFAULT_PING_INTERVAL_TIME);
-  
-  if(up)
-    ngx_conf_merge_value(conf->redis.cluster_check_interval, up->redis.cluster_check_interval, NGX_CONF_UNSET);
-  ngx_conf_merge_value(conf->redis.cluster_check_interval, prev->redis.cluster_check_interval, NCHAN_REDIS_DEFAULT_CLUSTER_CHECK_INTERVAL_TIME);
   
   if(up)
     ngx_conf_merge_value(conf->redis.nostore_fastpublish, up->redis.nostore_fastpublish, NGX_CONF_UNSET);
@@ -1012,6 +1078,9 @@ static void nchan_exit_worker(ngx_cycle_t *cycle) {
   if(!global_nchan_enabled) {
     return;
   }
+  
+  nchan_stats_exit_worker(cycle);
+  
   if(global_redis_enabled) {
     redis_store_prepare_to_exit_worker();
   }
@@ -1034,6 +1103,8 @@ static void nchan_exit_master(ngx_cycle_t *cycle) {
   if(!global_nchan_enabled) {
     return;
   }
+  nchan_stats_exit_master(cycle);
+  
   if(global_benchmark_enabled) {
     nchan_benchmark_exit_master(cycle);
   }
@@ -1286,18 +1357,41 @@ static char *ngx_conf_set_redis_subscribe_weights(ngx_conf_t *cf, ngx_command_t 
   return NGX_CONF_OK;
 }
 
-static char *ngx_conf_set_redis_optimize_target(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+static char *ngx_conf_set_jitter(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
   ngx_str_t          *val = &((ngx_str_t *) cf->args->elts)[1];
-  nchan_srv_conf_t   *scf = conf;
-  if(nchan_strmatch(val, 2, "bandwidth", "bw")) {
-    scf->redis.optimize_target = NCHAN_REDIS_OPTIMIZE_BANDWIDTH;
+  char               *p = conf;
+  double             *field = (double *) (p + cmd->offset);
+  double              fp;
+  
+  if((fp = nchan_atof(val->data, val->len)) == NGX_ERROR) {
+    return "invalid value, must be a non-negative floating-point number";
   }
-  else if(nchan_strmatch(val, 2, "cpu", "CPU")) {
-    scf->redis.optimize_target = NCHAN_REDIS_OPTIMIZE_CPU;
+
+  if(fp >= 1) {
+    return "jitter multiplier cannot exceed 1";
   }
-  else {
-    return "invalid value, must be \"bandwidth\" or \"cpu\"";
+  if(fp < 0) {
+    return "jitter multiplier cannot be less than 0";
   }
+  *field = fp;
+  return NGX_CONF_OK;
+}
+
+static char *ngx_conf_set_exponential_backoff(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+  ngx_str_t          *val = &((ngx_str_t *) cf->args->elts)[1];
+  char               *p = conf;
+  double             *field = (double *) (p + cmd->offset);
+  double              fp;
+  
+  if((fp = nchan_atof(val->data, val->len)) == NGX_ERROR) {
+    return "invalid value, must be a non-negative floating-point number";
+  }
+
+  if(fp < 0) {
+    return "value cannot be less than 0";
+  }
+  
+  *field = fp;
   return NGX_CONF_OK;
 }
 
@@ -1585,6 +1679,21 @@ static char *ngx_conf_set_redis_upstream_pass(ngx_conf_t *cf, ngx_command_t *cmd
   return ngx_conf_set_redis_upstream(cf, &value[1], conf);
 }
 
+
+static char *nchan_redis_stats_directive(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+  nchan_loc_conf_t     *lcf = conf;
+  
+  ngx_http_set_complex_value_slot(cf, cmd, conf);
+  
+  if(!is_valid_location(cf, lcf)) {
+    return NGX_CONF_ERROR;
+  }
+  
+  nchan_redis_stats_enabled = 1;
+  
+  lcf->request_handler = &nchan_redis_stats_handler;
+  return NGX_CONF_OK;
+}
 
 #include "nchan_config_commands.c" //hideous but hey, it works
 

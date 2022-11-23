@@ -205,7 +205,7 @@ ngx_int_t nchan_benchmark_run(void) {
   int       i;
   size_t msgbuf_maxlen = bench.config->msg_padding + 64;
   unsigned pubstart;
-  int64_t total_offset = 0;
+  //int64_t total_offset = 0;
   bench.msgbuf = ngx_alloc(msgbuf_maxlen, ngx_cycle->log);
   ngx_memset(bench.msgbuf, 'z', msgbuf_maxlen);
   
@@ -216,7 +216,7 @@ ngx_int_t nchan_benchmark_run(void) {
     bench.base_msg_period *= nchan_worker_processes;
     for(i=0; i < bench.config->channels; i++) {
       pubstart = (rand() / (RAND_MAX / bench.base_msg_period));
-      total_offset += pubstart;
+      //total_offset += pubstart;
       bench.timer.publishers[i] = nchan_add_interval_timer(benchmark_publish_message_interval_timer, &bench.shared.channels[i], pubstart);
     }
   }
@@ -226,7 +226,7 @@ ngx_int_t nchan_benchmark_run(void) {
       nchan_benchmark_channel_id(i, &channel_id);
       if(memstore_channel_owner(&channel_id) == ngx_process_slot) {
         pubstart = (rand() / (RAND_MAX / bench.base_msg_period));
-        total_offset += pubstart;
+        //total_offset += pubstart;
         bench.timer.publishers[i] = nchan_add_interval_timer(benchmark_publish_message_interval_timer, &bench.shared.channels[i], pubstart);
       }
       else {
@@ -533,7 +533,7 @@ static void serialize_numrun(int write, char **cur, int num, int runcount) {
   }
 }
 
-size_t hdrhistogram_serialize(int write, char *start, const struct hdr_histogram* hdr) {
+static size_t hdrhistogram_serialize(int write, char *start, const struct hdr_histogram* hdr) {
   int    i;
   char  *fakestart = NULL;
   char **cur;
@@ -675,7 +675,7 @@ static ngx_int_t init_command_get_config_value(const char *config, ngx_str_t *cm
   return 0;
 }
 
-void benchmark_controller(subscriber_t *sub, nchan_msg_t *msg) {
+static void benchmark_controller(subscriber_t *sub, nchan_msg_t *msg) {
   ngx_str_t            cmd = {msg->buf.last - msg->buf.pos, msg->buf.pos};
   ngx_http_request_t  *r = sub->request;
   nchan_loc_conf_t   *cf = ngx_http_get_module_loc_conf(r, ngx_nchan_module);
@@ -768,7 +768,7 @@ void benchmark_controller(subscriber_t *sub, nchan_msg_t *msg) {
   }
 }
 
-void benchmark_request_cleanup_handler(void *pd) {
+static void benchmark_request_cleanup_handler(void *pd) {
   if(nchan_benchmark_abort() == NGX_OK) {
     memstore_ipc_broadcast_benchmark_abort();
   }

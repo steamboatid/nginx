@@ -462,7 +462,7 @@ CfCmd.new do
       info: <<-EOS.gsub(/^ {8}/, '')
         The mode of operation of the Redis server. In `distributed` mode, messages are published directly to Redis, and retrieved in real-time. Any number of Nchan servers in distributed mode can share the Redis server (or cluster). Useful for horizontal scalability, but suffers the latency penalty of all message publishing going through Redis first.
         
-        In `backup` mode, messages are published locally first, then later forwarded to Redis, and are retrieved only upon chanel initialization. Only one Nchan server should use a Redis server (or cluster) in this mode. Useful for data persistence without sacrificing response times to the latency of a round-trip to Redis.
+        In `backup` mode, messages are published locally first, then later forwarded to Redis, and are retrieved only upon channel initialization. Only one Nchan server should use a Redis server (or cluster) in this mode. Useful for data persistence without sacrificing response times to the latency of a round-trip to Redis.
         
         In `nostore` mode, messages are published as in `distributed` mode, but are not stored. Thus Redis is used to broadcast messages to many Nchan instances with no delivery guarantees during connection failure, and only local in-memory storage. This means that there are also no message delivery guarantees for subscribers switching from one Nchan instance to another connected to the same Redis server or cluster. Nostore mode increases Redis publishing capacity by an order of magnitude.
       EOS
@@ -550,7 +550,7 @@ CfCmd.new do
       group: "storage",
       default: "<system default>",
       tags: ['redis', 'ssl'],
-      info: "Trusted certificate (CA) when using TLS for Redis connections. Defaults tothe system's SSL cert path unless nchan_redis_ssl_trusted_certificate is set"
+      info: "Trusted certificate (CA) when using TLS for Redis connections. Defaults to the system's SSL cert path unless nchan_redis_ssl_trusted_certificate is set"
   
   nchan_redis_ssl_ciphers [:upstream],
       :ngx_conf_set_str_slot,
@@ -560,7 +560,7 @@ CfCmd.new do
       group: "storage",
       default: "<system default>",
       tags: ['redis', 'ssl'],
-      info: "Acceptable cipers when using TLS for Redis connections"
+      info: "Acceptable ciphers when using TLS for Redis connections"
   
   nchan_redis_ssl_verify_certificate [:upstream],
       :ngx_conf_set_flag_slot,
@@ -593,14 +593,20 @@ CfCmd.new do
       default: "4m",
       info: "Send a keepalive command to redis to keep the Nchan redis clients from disconnecting. Set to 0 to disable."
   
-  nchan_redis_cluster_check_interval [:main, :srv, :upstream, :loc],
-      :ngx_conf_set_sec_slot,
-      [:loc_conf, :"redis.cluster_check_interval"],
-      
+  nchan_redis_load_scripts_unconditionally [:upstream],
+      :ngx_conf_set_flag_slot,
+      [:srv_conf, "redis.load_scripts_unconditionally"],
+      default: "no",
+      group: "development",
+      undocumented: true
+  
+  nchan_redis_accurate_subscriber_count [:upstream],
+      :ngx_conf_set_flag_slot,
+      [:srv_conf, "redis.accurate_subscriber_count"],
+      default: "off",
       group: "storage",
       tags: ['redis'],
-      default: "5s",
-      info: "Send a CLUSTER INFO command to each connected Redis node to see if the cluster config epoch has changed. Sent only when in Cluster mode and if any other command that may result in a MOVE error has not been sent in the configured time."
+      info: "When disabled, use fast but potentially inaccurate subscriber counts. These may become inaccurate if Nginx workers exit uncleanly or are terminated. When enabled, use a slightly slower but completely accurate subscriber count. Defaults to 'off' for legacy reasons, but will be enabled by default in the future."
   
   nchan_redis_wait_after_connecting [:main, :srv, :loc],
       :nchan_ignore_obsolete_setting,
@@ -608,16 +614,234 @@ CfCmd.new do
       
       group: "obsolete",
       tags: ['redis'],
-      uncocumented: true
+      undocumented: true
   
   nchan_redis_connect_timeout [:upstream],
       :ngx_conf_set_msec_slot,
-      [:srv_conf, :"redis.connect_timeout"],
-      
+      [:srv_conf, :"redis.node_connect_timeout"],
+  
+      alt: :nchan_redis_node_connect_timeout,
       group: "storage",
       tags: ['redis'],
-      default: "600ms",
+      default: "10s",
       info: "Redis server connection timeout."
+  
+  nchan_redis_cluster_connect_timeout [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.cluster_connect_timeout"],
+  
+      alt: :nchan_redis_node_connect_timeout,
+      group: "storage",
+      tags: ['redis'],
+      default: "15s",
+      info: "Redis cluster connection timeout."
+  
+  nchan_redis_cluster_max_failing_time [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.cluster_max_failing_msec"],
+  
+      group: "storage",
+      tags: ['redis'],
+      default: "30s",
+      info: "Maximum time a Redis cluster can be in a failing state before Nchan disconnects from it. During this time, Nchan will try to recover from a cluster or node failure without disconnecting the entire cluster."
+  
+  nchan_redis_reconnect_delay [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.reconnect_delay.min"],
+  
+      alt: :nchan_redis_reconnect_delay_min,
+      group: "storage",
+      tags: ['redis'],
+      value: "<time>",
+      default: "500ms",
+      info: "After a connection failure, wait this long before trying to reconnect to Redis."
+  
+  nchan_redis_reconnect_delay_jitter [:upstream],
+      :ngx_conf_set_jitter,
+      [:srv_conf, :"redis.reconnect_delay.jitter_multiplier"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<floating point> >= 0 (0 to disable)",
+      default: "0.1 (10% of delay value)",
+      info: "Introduce random jitter to Redis reconnection time, where the range is `±(reconnect_delay * nchan_redis_reconnect_delay_jitter) / 2`."
+    
+  nchan_redis_reconnect_delay_backoff [:upstream],
+      :ngx_conf_set_exponential_backoff,
+      [:srv_conf, :"redis.reconnect_delay.backoff_multiplier"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<floating point> >= 0 (0 to disable)",
+      default: "0.5 (increase delay by 50% each try)",
+      info: "Add an exponentially increasing delay to Redis connection retries. `Delay[n] = (Delay[n-1] + jitter) * (nchan_redis_reconnect_delay_backoff + 1)`."
+      
+  nchan_redis_reconnect_delay_max [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.reconnect_delay.max"],
+  
+      group: "storage",
+      tags: ['redis'],
+      default: "10s",
+      value: "<time> (0 to disable)",
+      info: "Maximum Redis reconnection delay after backoff and jitter."
+
+  nchan_redis_idle_channel_keepalive_safety_margin [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.idle_channel_ttl_safety_margin"],
+      group: "storage",
+      tags: ['redis'],
+      value: "<time>",
+      default: "60s",
+      undocumented: true
+  
+  nchan_redis_idle_channel_keepalive_min [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.idle_channel_ttl.min"],
+      group: "storage",
+      tags: ['redis'],
+      value: "<time>",
+      default: "10m",
+      undocumented: true
+  
+  nchan_redis_idle_channel_keepalive_jitter [:upstream],
+      :ngx_conf_set_jitter,
+      [:srv_conf, :"redis.idle_channel_ttl.jitter_multiplier"],
+      group: "storage",
+      tags: ['redis'],
+      value: "<floating point> >= 0 (0 to disable)",
+      default: "0.7 (70% of delay value)",
+      undocumented: true
+    
+  nchan_redis_idle_channel_keepalive_backoff [:upstream],
+      :ngx_conf_set_exponential_backoff,
+      [:srv_conf, :"redis.idle_channel_ttl.backoff_multiplier"],
+      group: "storage",
+      tags: ['redis'],
+      value: "<floating point> >= 0 (0 to disable)",
+      default: "1 (increase by 100% each time)",
+      undocumented: true
+      
+  nchan_redis_idle_channel_keepalive_max [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.idle_channel_ttl.max"],
+      group: "storage",
+      tags: ['redis'],
+      default: "168h (1 week)",
+      value: "<time> (0 to disable)",
+      undocumented: true
+  
+  nchan_redis_cluster_check_interval_min [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.cluster_check_interval.min"],
+  
+      alt: :nchan_redis_cluster_check_interval,
+      group: "storage",
+      tags: ['redis'],
+      value: "<time>",
+      default: "1s (0 to disable)",
+      info: "When connected to a cluster, periodically check the cluster state and layout via a random master node."
+  
+  nchan_redis_cluster_check_interval_jitter [:upstream],
+      :ngx_conf_set_jitter,
+      [:srv_conf, :"redis.cluster_check_interval.jitter_multiplier"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<floating point> >= 0, (0 to disable)",
+      default: "0.2 (20% of interval value)",
+      info: "Introduce random jitter to Redis cluster check interval, where the range is `±(cluster_check_interval * nchan_redis_cluster_check_interval_jitter) / 2`."
+  
+  nchan_redis_cluster_check_interval_backoff [:upstream],
+      :ngx_conf_set_exponential_backoff,
+      [:srv_conf, :"redis.cluster_check_interval.backoff_multiplier"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<floating point> >= 0, ratio of current delay",
+      default: "2 (increase delay by 200% each try)",
+      info: "Add an exponentially increasing delay to the Redis cluster check interval. `Delay[n] = (Delay[n-1] + jitter) * (nchan_redis_cluster_check_interval_backoff + 1)`."
+      
+  nchan_redis_cluster_check_interval_max [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.cluster_check_interval.max"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<time> (0 to disable)",
+      default: "30s",
+      info: "Maximum Redis cluster check interval after backoff and jitter."
+    
+
+  nchan_redis_cluster_recovery_delay [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.cluster_recovery_delay.min"],
+  
+      alt: :nchan_redis_cluster_recovery_delay_min,
+      group: "storage",
+      tags: ['redis'],
+      value: "<time>",
+      default: "100ms",
+      info: "After a cluster recovery failure, wait this long to try again."
+  
+  nchan_redis_cluster_recovery_delay_jitter [:upstream],
+      :ngx_conf_set_jitter,
+      [:srv_conf, :"redis.cluster_recovery_delay.jitter_multiplier"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<floating point> >= 0, (0 to disable)",
+      default: "0.5 (50% of delay value)",
+      info: "Introduce random jitter to Redis cluster recovery retry time, where the range is `±(recovery_delay * nchan_redis_cluster_recovery_delay_jitter) / 2`."
+  
+  nchan_redis_cluster_recovery_delay_backoff [:upstream],
+      :ngx_conf_set_exponential_backoff,
+      [:srv_conf, :"redis.cluster_recovery_delay.backoff_multiplier"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<floating point> >= 0, ratio of current delay",
+      default: "0.5 (increase delay by 50% each try)",
+      info: "Add an exponentially increasing delay to Redis cluster recovery retries. `Delay[n] = (Delay[n-1] + jitter) * (nchan_redis_cluster_recovery_delay_backoff + 1)`."
+      
+  nchan_redis_cluster_recovery_delay_max [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.cluster_recovery_delay.max"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<time> (0 to disable)",
+      default: "2s",
+      info: "Maximum Redis cluster recovery delay after backoff and jitter."
+  
+  nchan_redis_command_timeout [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.command_timeout"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<time> (0 to leave unlimited)",
+      default: "5s",
+      info: "If a Redis server exceeds this time to produce a command reply, it is considered unhealthy and is disconnected."
+  
+  nchan_redis_retry_commands [:upstream],
+      :ngx_conf_set_flag_slot,
+      [:srv_conf, :"redis.retry_commands"],
+  
+      group: "storage",
+      tags: ['redis'],
+      default: "on",
+      info: "Allow Nchan to retry some Redis commands on keyslot errors and cluster unavailability. Queuing up a lot of commands while the cluster is unavailable may lead to excessive memory use, but it can also defer commands during transient failures."
+
+  nchan_redis_retry_commands_max_wait [:upstream],
+      :ngx_conf_set_msec_slot,
+      [:srv_conf, :"redis.retry_commands_max_wait"],
+  
+      group: "storage",
+      tags: ['redis'],
+      value: "<time> (0 to leave unlimited)",
+      default: "500ms",
+      info: "When `nchan_redis_retry_commands` is on, the maximum time a command will stayed queued to be retried."
   
   nchan_redis_subscribe_weights [:upstream],
       :ngx_conf_set_redis_subscribe_weights,
@@ -631,14 +855,13 @@ CfCmd.new do
       info: "Determines how subscriptions to Redis PUBSUB channels are distributed between master and slave nodes. The higher the number, the more likely that each node of that type will be chosen for each new channel. The weights for slave nodes are cumulative, so an equal 1:1 master:slave weight ratio with two slaves would have a 1/3 chance of picking a master, and 2/3 chance of picking one of the slaves. The weight must be a non-negative integer."
   
   nchan_redis_optimize_target [:upstream],
-      :ngx_conf_set_redis_optimize_target,
+      :nchan_ignore_obsolete_setting,
       :srv_conf,
-      
       group: "storage",
       tags: ['redis'],
       value: [:cpu, :bandwidth],
-      default: "cpu",
-      info: "This tweaks whether [effect replication](https://redis.io/commands/eval#replicating-commands-instead-of-scripts) is enabled. Optimizing for CPU usage enables effect replication, costing additional bandwidth (between 1.2 and 2 times more) between all master->slave links. Optimizing for bandwidth increases CPU load on slaves, but keeps outgoing bandwidth used for replication the same as the incoming bandwidth on Master."
+      default: "bandwidth",
+      info: "This tweaks whether [effect replication](https://redis.io/commands/eval#replicating-commands-instead-of-scripts) is enabled. This setting is obsolete, as effect replication is now always enabled to support other features"
   
   nchan_redis_namespace [:main, :srv, :upstream, :loc], 
       :ngx_conf_set_str_slot,
@@ -668,6 +891,36 @@ CfCmd.new do
       value: "<time>",
       default: "30s",
       info: "A Redis-stored channel and its messages are removed from memory (local cache) after this timeout, provided there are no local subscribers."
+  
+  nchan_redis_upstream_stats [:srv, :loc],
+      :nchan_redis_stats_directive,
+      [:loc_conf, :"redis.stats.upstream_name"],
+      args: 1,
+      
+      group: "storage",
+      tags: [ 'redis', 'meta', 'stats' ],
+      value: "<upstream_name>",
+      default: "(none)",
+      info: "Defines a location as redis statistics endpoint. GET requests to this location produce a JSON response with detailed listings of total Redis command times and number of calls, broken down by node and command type. Useful for making graphs about Redis performance. Can be set with nginx variables."
+  
+  nchan_redis_upstream_stats_enabled [:upstream],
+      :ngx_conf_set_flag_slot,
+      [:srv_conf, :"redis.stats.enabled"],
+      args: 1,
+      group: "storage",
+      tags: ['redis'],
+      value: [:on, :off],
+      default: "<on> if at least 1 redis stats location is configured, otherwise <off>",
+      info: "Gather Redis node command timings for this upstream"
+
+  nchan_redis_upstream_stats_disconnected_timeout [:upstream],
+      :ngx_conf_set_flag_slot,
+      [:srv_conf, :"redis.stats.max_detached_time_sec"],
+      args: 1,
+      group: "storage",
+      tags: ['redis'],
+      default: "5m",
+      info: "Keep stats for disconnected nodes around for this long. Useful for tracking stats for nodes that have intermittent connectivity issues."
   
   nchan_message_timeout [:main, :srv, :loc], 
       :nchan_set_message_timeout, 

@@ -9,6 +9,8 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
 #include "ngx_http_upstream_check_module.h"
 #endif
@@ -46,6 +48,8 @@ typedef struct {
     ngx_uint_t                          max_fails;
     time_t                              fail_timeout;
 
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
     ngx_uint_t                          check_index;
 #endif
@@ -482,6 +486,8 @@ ngx_http_upstream_init_fair_rr(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
                 peers->peer[n].fail_timeout = server[i].fail_timeout;
                 peers->peer[n].down = server[i].down;
                 peers->peer[n].weight = server[i].down ? 0 : server[i].weight;
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
                 if (!server[i].down) {
                     peers->peer[n].check_index =
@@ -541,6 +547,8 @@ ngx_http_upstream_init_fair_rr(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
                 backup->peer[n].max_fails = server[i].max_fails;
                 backup->peer[n].fail_timeout = server[i].fail_timeout;
                 backup->peer[n].down = server[i].down;
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
                 if (!server[i].down) {
                     backup->peer[n].check_index =
@@ -566,7 +574,7 @@ ngx_http_upstream_init_fair_rr(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
 
     /* an upstream implicitly defined by proxy_pass, etc. */
 
-    if (us->port == 0) {
+    if (us->port == 0) { /* //dkmods */
         ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
                       "no port in upstream \"%V\" in %s:%ui",
                       &us->host, us->file_name, us->line);
@@ -576,7 +584,7 @@ ngx_http_upstream_init_fair_rr(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
     ngx_memzero(&u, sizeof(ngx_url_t));
 
     u.host = us->host;
-    u.port = (in_port_t) us->port;
+    u.port = (in_port_t) us->port; /* //dkmods */
 
     if (ngx_inet_resolve_host(cf->pool, &u) != NGX_OK) {
         if (u.err) {
@@ -606,6 +614,8 @@ ngx_http_upstream_init_fair_rr(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
         peers->peer[i].weight = 1;
         peers->peer[i].max_fails = 1;
         peers->peer[i].fail_timeout = 10;
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
         peers->peer[i].check_index = (ngx_uint_t) NGX_ERROR;
 #endif
@@ -752,6 +762,8 @@ ngx_http_upstream_fair_try_peer(ngx_peer_connection_t *pc,
     peer = &fp->peers->peer[peer_id];
 
     if (!peer->down) {
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
         ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
                        "[upstream_fair] get fair peer, check_index: %ui",
@@ -768,6 +780,8 @@ ngx_http_upstream_fair_try_peer(ngx_peer_connection_t *pc,
             peer->shared->fails = 0;
             return NGX_OK;
         }
+
+/** patch //dkmods **/
 #if (NGX_HTTP_UPSTREAM_CHECK)
         }
 #endif

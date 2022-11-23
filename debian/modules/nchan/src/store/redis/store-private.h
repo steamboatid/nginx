@@ -25,11 +25,10 @@
 #define REDIS_LUA_HASH_LENGTH 40
 #define REDIS_NODESET_NOT_READY_MAX_RETRIES 2
 
-//OBSOLETE
-typedef struct {
-  unsigned         min:16;
-  unsigned         max:16;
-} redis_cluster_slot_range_t;
+extern redis_nodeset_t  redis_nodeset[NCHAN_MAX_NODESETS];
+extern int              redis_nodeset_count;
+extern char            *redis_worker_id;
+extern char            *nchan_redis_blankname;
 
 
 typedef struct rdstore_channel_head_s rdstore_channel_head_t;
@@ -45,7 +44,7 @@ struct rdstore_channel_head_s {
   ngx_int_t                    fetching_message_count;
   ngx_uint_t                   internal_sub_count;
   ngx_event_t                  keepalive_timer;
-  ngx_uint_t                   keepalive_times_sent;
+  ngx_msec_t                   keepalive_interval;
   nchan_msg_id_t               last_msgid;
   
   void                        *redis_subscriber_privdata;
@@ -55,6 +54,7 @@ struct rdstore_channel_head_s {
   
   struct {                   //redis
     int                          generation;
+    ngx_str_t                    pubsub_id; //NULL-terminated, btw
     redis_nodeset_t             *nodeset;
     struct {                   //node
       redis_node_t                *cmd;
@@ -96,7 +96,8 @@ struct rdstore_channel_head_s {
 };
 
 
-void redisCheckErrorCallback(redisAsyncContext *c, void *r, void *privdata);
+void redisCheckErrorCallback(redisAsyncContext *ac, void *r, void *privdata);
+void redisEchoCallback(redisAsyncContext *ac, void *r, void *privdata);
 int redisReplyOk(redisAsyncContext *c, void *r);
 ngx_int_t parse_redis_url(ngx_str_t *url, redis_connect_params_t *rcp);
 ngx_int_t rdstore_initialize_chanhead_reaper(nchan_reaper_t *reaper, char *name);
@@ -104,6 +105,8 @@ ngx_int_t rdstore_initialize_chanhead_reaper(nchan_reaper_t *reaper, char *name)
 ngx_int_t redis_chanhead_gc_add(rdstore_channel_head_t *head, ngx_int_t expire, const char *reason);
 ngx_int_t redis_chanhead_gc_withdraw(rdstore_channel_head_t *head);
 ngx_int_t redis_chanhead_catch_up_after_reconnect(rdstore_channel_head_t *ch);
+ngx_int_t redis_chanhead_set_pubsub_status(rdstore_channel_head_t *head, redis_node_t *node,  redis_pubsub_status_t status);
+
 
 ngx_int_t ensure_chanhead_pubsub_subscribed_if_needed(rdstore_channel_head_t *ch);
 

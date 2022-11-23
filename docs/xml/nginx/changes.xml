@@ -10011,11 +10011,11 @@ Thanks to Charles Chen.
 
 <change type="bugfix">
 <para lang="ru">
-nginx не собирался gcc 4.7 с оптимизацией -O2
+nginx не собирался gcc 4.7 с оптимизацией -O3
 если использовался параметр --with-ipv6.
 </para>
 <para lang="en">
-nginx could not be built by gcc 4.7 with -O2 optimization
+nginx could not be built by gcc 4.7 with -O3 optimization
 if the --with-ipv6 option was used.
 </para>
 </change>
@@ -14406,11 +14406,11 @@ Thanks to Piotr Sikora.
 
 <change type="bugfix">
 <para lang="ru">
-nginx мог не собираться gcc 4.x при использовании оптимизации -O2 и выше.<br/>
+nginx мог не собираться gcc 4.x при использовании оптимизации -O3 и выше.<br/>
 Спасибо Максиму Дунину и Денису Латыпову.
 </para>
 <para lang="en">
-nginx might not be built by gcc 4.x if the -O2 or higher optimization option
+nginx might not be built by gcc 4.x if the -O3 or higher optimization option
 was used.<br/>
 Thanks to Maxim Dounin and Denis F. Latypoff.
 </para>
@@ -21970,12 +21970,12 @@ the "400" and "408" error codes.
 
 <change type="bugfix">
 <para lang="ru">
-при сборке с оптимизацией -O2 в рабочем процессе мог произойти
+при сборке с оптимизацией -O3 в рабочем процессе мог произойти
 segmentation fault.
 </para>
 <para lang="en">
 a segmentation fault might occur in worker process
-if nginx was built with -O2 optimization.
+if nginx was built with -O3 optimization.
 </para>
 </change>
 
@@ -21999,13 +21999,13 @@ the bug had appeared in 0.5.9.
 
 <change type="bugfix">
 <para lang="ru">
-при сборке с оптимизацией -O2 в рабочем процессе мог произойти
+при сборке с оптимизацией -O3 в рабочем процессе мог произойти
 segmentation fault;
 ошибка появилась в 0.5.1.
 </para>
 <para lang="en">
 a segmentation fault might occur in worker process
-if nginx was built with -O2 optimization;
+if nginx was built with -O3 optimization;
 the bug had appeared in 0.5.1.
 </para>
 </change>
