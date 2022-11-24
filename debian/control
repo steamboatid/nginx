@@ -258,6 +258,7 @@ Depends: libnginx-mod-http-accept-language (= ${binary:Version}),
          libnginx-mod-http-security-headers (= ${binary:Version}),
          libnginx-mod-http-bot-verifier (= ${binary:Version}),
          libnginx-mod-http-doh (= ${binary:Version}),
+         libnginx-mod-http-dynamic-etag (= ${binary:Version}),
          libnginx-mod-mail (= ${binary:Version}),
          libnginx-mod-nchan (= ${binary:Version}),
          libnginx-mod-rtmp (= ${binary:Version}),
@@ -870,3 +871,14 @@ Description: GeoIP2 Stream module for Nginx
  .
  Those variables include country, region, city, latitude, longitude, postal
  code, etc.
+
+Package: libnginx-mod-http-dynamic-etag
+Architecture: any
+Depends: libnginx-mod-http-subs-filter (= ${binary:Version}),
+         libnginx-mod-http-ndk (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends},
+Description: NGINX module empowers your dynamic content with automatic ETag
+ header. It allows client browsers to issue conditional `GET` requests to
+ dynamic pages. And thus saves bandwidth and ensures better performance.
+ For more details please visit https://github.com/dvershinin/ngx_dynamic_etag

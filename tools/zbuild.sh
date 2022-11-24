@@ -4,6 +4,9 @@ adir=$(dirname $(dirname $0))
 cd $adir
 pwd
 
+#-- refresh readme
+nohup /bin/bash $adir/tools/refresh-readme-mods.sh >/dev/null 2>&1 &
+
 #fakeroot debian/rules clean
 #rm -rf objs
 
@@ -101,6 +104,7 @@ export CFLAGS="$CFLAGS $LDLUA -O3"
 --add-module=debian/modules/http-sticky \
 \
 --add-module=debian/modules/naxsi/naxsi_src \
+--add-module=debian/modules/http-dynamic-etag \
 
 
 # lua only compatible w/ PCRE v1

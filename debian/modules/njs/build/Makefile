@@ -999,9 +999,9 @@ ts_clean:
 pc: build/njs.pc
 
 build/njs.pc: build/njs_auto_config.h
-	sed -e "s,@PREFIX@,/tb2/root/github/nginx/debian/modules/njs/build," \
-		-e "s,@LIBDIR@,/tb2/root/github/nginx/debian/modules/njs/build," \
-		-e "s,@CFLAGS@,-I/tb2/root/github/nginx/debian/modules/njs/build -I/tb2/root/github/nginx/debian/modules/njs/src," \
+	sed -e "s,@PREFIX@,/root/github/nginx/debian/modules/njs/build," \
+		-e "s,@LIBDIR@,/root/github/nginx/debian/modules/njs/build," \
+		-e "s,@CFLAGS@,-I/root/github/nginx/debian/modules/njs/build -I/root/github/nginx/debian/modules/njs/src," \
 		-e "s,@VERSION@,$(NJS_VER)," \
 		-e "s,@EXTRA_LIBS@,-lm   ," \
 		src/njs.pc.in > $@

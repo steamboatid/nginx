@@ -1,4 +1,4 @@
-﻿= nginx_substitutions_filter =
+= nginx_substitutions_filter =
 
 _Note: this module is not distributed with the Nginx source. Installation instructions can be found [#Installation below]._
 

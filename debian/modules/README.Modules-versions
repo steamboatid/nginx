@@ -4,22 +4,22 @@ README for Modules versions
 This file lists third party modules built with nginx in Debian, homepage and
 version.
 
-Total: 43 modules
+Total: 44 modules
 
  ngx_waf 
   Homepage:     (https://github.com/ADD-SP/ngx_waf) 
-  Commit Date:  Wed 05 Jan 2022 01:40:19 PM WIB (epoch: 1641364819) 
-  Commit URL:   [922599e] (https://github.com/ADD-SP/ngx_waf/commit/922599eb473e232d7550d6ff63c4bfa18add5205) 
+  Commit Date:  Sat 09 Jul 2022 09:44:37 AM WIB (epoch: 1657334677) 
+  Commit URL:   [f97a439] (https://github.com/ADD-SP/ngx_waf/commit/f97a4399dcc47f449254fff2f2fa6526dfbcbd81) 
 
  ngx_echo 
   Homepage:     (https://github.com/agentzh/echo-nginx-module) 
-  Commit Date:  Thu 11 Nov 2021 04:20:04 PM WIB (epoch: 1636622404) 
-  Commit URL:   [267d0e3] (https://github.com/openresty/echo-nginx-module/commit/267d0e3e8c77b1a55bee9677299908eb34815146) 
+  Commit Date:  Mon 01 Aug 2022 06:52:01 AM WIB (epoch: 1659311521) 
+  Commit URL:   [8376edc] (https://github.com/openresty/echo-nginx-module/commit/8376edc2bbc427e8812d105f4061045449e0db2b) 
 
  ngx_headers_more 
   Homepage:     (https://github.com/agentzh/headers-more-nginx-module) 
-  Commit Date:  Sat 16 Oct 2021 09:41:54 AM WIB (epoch: 1634352114) 
-  Commit URL:   [a4a0686] (https://github.com/openresty/headers-more-nginx-module/commit/a4a0686605161a6777d7d612d5aef79b9e7c13e0) 
+  Commit Date:  Sun 17 Jul 2022 05:55:13 PM WIB (epoch: 1658055313) 
+  Commit URL:   [bea1be3] (https://github.com/openresty/headers-more-nginx-module/commit/bea1be3bbf6af28f6aa8cf0c01c07ee1637e2bd0) 
 
  ngx_cookie_flag 
   Homepage:     (https://github.com/AirisX/nginx_cookie_flag_module) 
@@ -28,8 +28,8 @@ Total: 43 modules
 
  ngx_fancyindex 
   Homepage:     (https://github.com/aperezdc/ngx-fancyindex) 
-  Commit Date:  Fri 29 Oct 2021 02:37:48 AM WIB (epoch: 1635449868) 
-  Commit URL:   [5930c29] (https://github.com/aperezdc/ngx-fancyindex/commit/5930c29d6a97787c101cee63b62f6eaa2945bd96) 
+  Commit Date:  Tue 19 Jul 2022 07:54:45 PM WIB (epoch: 1658235285) 
+  Commit URL:   [f50d7b7] (https://github.com/aperezdc/ngx-fancyindex/commit/f50d7b799f56ba722732f0e7d70da57b455d8aa8) 
 
  ngx_dav_ext 
   Homepage:     (https://github.com/arut/nginx-dav-ext-module) 
@@ -45,6 +45,11 @@ Total: 43 modules
   Homepage:     (https://github.com/bpaquet/ngx_http_enhanced_memcached_module) 
   Commit Date:  Wed 30 May 2018 09:39:46 AM WIB (epoch: 1527647986) 
   Commit URL:   [b58a450] (https://github.com/bpaquet/ngx_http_enhanced_memcached_module/commit/b58a4500db3c4ee274be54a18abc767219dcfd36) 
+
+ ngx_dynamic_etag 
+  Homepage:     (https://github.com/dvershinin/ngx_dynamic_etag) 
+  Commit Date:  Sat 08 Feb 2020 04:12:00 PM WIB (epoch: 1581153120) 
+  Commit URL:   [c7ee492] (https://github.com/dvershinin/ngx_dynamic_etag/commit/c7ee492f75fe7d4daa7aa707e0ebbd2e1ee4cce6) 
 
  ngx_slowfs_cache 
   Homepage:     (https://github.com/dvershinin/ngx_slowfs_cache) 
@@ -63,18 +68,18 @@ Total: 43 modules
 
  ngx_http_google_filter 
   Homepage:     (https://github.com/GetPageSpeed/ngx_http_google_filter_module) 
-  Commit Date:  Fri 05 Jul 2019 05:04:28 PM WIB (epoch: 1562321068) 
-  Commit URL:   [f92e87e] (https://github.com/GetPageSpeed/ngx_http_google_filter_module/commit/f92e87e84244b021a57212d6466af8a123c0e60c) 
+  Commit Date:  Mon 27 Jun 2022 03:58:29 AM WIB (epoch: 1656277109) 
+  Commit URL:   [6d6602f] (https://github.com/GetPageSpeed/ngx_http_google_filter_module/commit/6d6602f230aeb8e4ac123d653bf19921d040edac) 
 
  ngx_immutable 
   Homepage:     (https://github.com/GetPageSpeed/ngx_immutable) 
-  Commit Date:  Sat 22 Feb 2020 08:04:58 PM WIB (epoch: 1582376698) 
-  Commit URL:   [0f07107] (https://github.com/GetPageSpeed/ngx_immutable/commit/0f07107764b19718266237e8ceac499a4cc7329f) 
+  Commit Date:  Sun 20 Nov 2022 02:42:15 PM WIB (epoch: 1668930135) 
+  Commit URL:   [dd4a39e] (https://github.com/GetPageSpeed/ngx_immutable/commit/dd4a39ebd676540a4264a8aaf5f4f9cf117e3883) 
 
  ngx_security_headers 
   Homepage:     (https://github.com/GetPageSpeed/ngx_security_headers) 
-  Commit Date:  Mon 15 Mar 2021 12:40:48 PM WIB (epoch: 1615786848) 
-  Commit URL:   [a4f1017] (https://github.com/GetPageSpeed/ngx_security_headers/commit/a4f1017f0e706bfdb2a4f5b20e0023d138148504) 
+  Commit Date:  Fri 18 Mar 2022 02:37:04 PM WIB (epoch: 1647589024) 
+  Commit URL:   [f450109] (https://github.com/GetPageSpeed/ngx_security_headers/commit/f450109982eac5fcba5461a03061060c25c3dcdc) 
 
  ngx_upstream_fair 
   Homepage:     (https://github.com/gnosek/nginx-upstream-fair) 
@@ -83,8 +88,8 @@ Total: 43 modules
 
  ngx_brotli 
   Homepage:     (https://github.com/google/ngx_brotli) 
-  Commit Date:  Tue 06 Oct 2020 02:40:22 PM WIB (epoch: 1601970022) 
-  Commit URL:   [9aec15e] (https://github.com/google/ngx_brotli/commit/9aec15e2aa6feea2113119ba06460af70ab3ea62) 
+  Commit Date:  Fri 29 Apr 2022 07:10:01 PM WIB (epoch: 1651234201) 
+  Commit URL:   [6e975bc] (https://github.com/google/ngx_brotli/commit/6e975bcb015f62e1f303054897783355e2a877dc) 
 
  ngx_ct 
   Homepage:     (https://github.com/grahamedgecombe/nginx-ct) 
@@ -98,13 +103,13 @@ Total: 43 modules
 
  ngx_testcookie 
   Homepage:     (https://github.com/kyprizel/testcookie-nginx-module) 
-  Commit Date:  Thu 30 Jul 2020 07:03:36 PM WIB (epoch: 1596110616) 
-  Commit URL:   [5113746] (https://github.com/kyprizel/testcookie-nginx-module/commit/51137466b12b2b023f0208a0b6a1bc9c0e805618) 
+  Commit Date:  Fri 07 Oct 2022 04:03:13 PM WIB (epoch: 1665133393) 
+  Commit URL:   [64137c2] (https://github.com/kyprizel/testcookie-nginx-module/commit/64137c2f7e66e8866f56fdecaaf09ac10a034da9) 
 
  ngx_http_geoip2 
   Homepage:     (https://github.com/leev/ngx_http_geoip2_module) 
-  Commit Date:  Thu 03 Dec 2020 04:54:57 AM WIB (epoch: 1606946097) 
-  Commit URL:   [a26c6be] (https://github.com/leev/ngx_http_geoip2_module/commit/a26c6beed77e81553686852dceb6c7fdacc5970d) 
+  Commit Date:  Wed 22 Jun 2022 11:30:42 AM WIB (epoch: 1655872242) 
+  Commit URL:   [cbaa354] (https://github.com/leev/ngx_http_geoip2_module/commit/cbaa35461c62a99d2577e6bae3273492502d8769) 
 
  ngx_upload_progress 
   Homepage:     (https://github.com/masterzen/nginx-upload-progress-module) 
@@ -113,18 +118,18 @@ Total: 43 modules
 
  naxsi 
   Homepage:     (https://github.com/nbs-system/naxsi) 
-  Commit Date:  Fri 05 Nov 2021 09:47:20 PM WIB (epoch: 1636123640) 
-  Commit URL:   [2802c22] (https://github.com/nbs-system/naxsi/commit/2802c22f05150c87dfcc06a9e8cd67e1ffc21a50) 
+  Commit Date:  Thu 15 Sep 2022 02:16:09 AM WIB (epoch: 1663182969) 
+  Commit URL:   [d714f16] (https://github.com/nbs-system/naxsi/commit/d714f1636ea49a9a9f4f06dba14aee003e970834) 
 
  njs 
   Homepage:     (https://github.com/nginx/njs) 
-  Commit Date:  Thu 30 Dec 2021 01:26:40 AM WIB (epoch: 1640802400) 
-  Commit URL:   [dc20777] (https://github.com/nginx/njs/commit/dc207775a557eef78c57d7b04b3e64d1804dc937) 
+  Commit Date:  Sat 19 Nov 2022 05:10:25 AM WIB (epoch: 1668809425) 
+  Commit URL:   [fe858ce] (https://github.com/nginx/njs/commit/fe858ce9124637d70928f2c242b711cacb9ef41e) 
 
  ngx_lua 
   Homepage:     (https://github.com/openresty/lua-nginx-module) 
-  Commit Date:  Tue 04 Jan 2022 01:54:16 PM WIB (epoch: 1641279256) 
-  Commit URL:   [320f030] (https://github.com/openresty/lua-nginx-module/commit/320f030785e901e4310cb75607541240a771f5af) 
+  Commit Date:  Sun 06 Nov 2022 08:39:13 AM WIB (epoch: 1667698753) 
+  Commit URL:   [6e3b1c4] (https://github.com/openresty/lua-nginx-module/commit/6e3b1c4fde47039f0ce2ee75fc678dab27944667) 
 
  ngx_memc 
   Homepage:     (https://github.com/openresty/memc-nginx-module) 
@@ -143,13 +148,13 @@ Total: 43 modules
 
  ngx_srcache 
   Homepage:     (https://github.com/openresty/srcache-nginx-module) 
-  Commit Date:  Fri 15 Oct 2021 10:20:46 PM WIB (epoch: 1634311246) 
-  Commit URL:   [d702489] (https://github.com/openresty/srcache-nginx-module/commit/d702489a645089a9d3f5788ad2245b9e15c4f71a) 
+  Commit Date:  Tue 28 Jun 2022 08:55:57 AM WIB (epoch: 1656381357) 
+  Commit URL:   [be22ac0] (https://github.com/openresty/srcache-nginx-module/commit/be22ac0dcd9245aadcaca3220da96a0c1a0285a7) 
 
  ngx_stream_lua 
   Homepage:     (https://github.com/openresty/stream-lua-nginx-module) 
-  Commit Date:  Mon 06 Dec 2021 07:25:48 AM WIB (epoch: 1638750348) 
-  Commit URL:   [e3d9af3] (https://github.com/openresty/stream-lua-nginx-module/commit/e3d9af3f9190ef7be9601ecc07d7518874ec282d) 
+  Commit Date:  Thu 03 Nov 2022 08:16:22 AM WIB (epoch: 1667438182) 
+  Commit URL:   [ae02d9a] (https://github.com/openresty/stream-lua-nginx-module/commit/ae02d9ac1f1dda4aeb36184dc2a5d2436c23ecd0) 
 
  ngx_sticky 
   Homepage:     (https://github.com/Refinitiv/nginx-sticky-module-ng) 
@@ -158,23 +163,23 @@ Total: 43 modules
 
  ngx_bot_verifier 
   Homepage:     (https://github.com/repsheet/ngx_bot_verifier) 
-  Commit Date:  Fri 12 Jul 2019 10:20:01 AM WIB (epoch: 1562901601) 
-  Commit URL:   [c23bb55] (https://github.com/repsheet/ngx_bot_verifier/commit/c23bb55ce3597999723f3d7e01fb4389bc6bc463) 
+  Commit Date:  Mon 27 Jun 2022 03:11:04 AM WIB (epoch: 1656274264) 
+  Commit URL:   [68800e2] (https://github.com/repsheet/ngx_bot_verifier/commit/68800e23eb9d8052f7966da5a824630fca3fa86d) 
 
  ngx_devel_kit 
   Homepage:     (https://github.com/simpl/ngx_devel_kit) 
-  Commit Date:  Sun 28 Jan 2018 12:39:01 AM WIB (epoch: 1517074741) 
-  Commit URL:   [a22dade] (https://github.com/vision5/ngx_devel_kit/commit/a22dade76c838e5f377d58d007f65d35b5ce1df3) 
+  Commit Date:  Sat 21 May 2022 04:13:53 PM WIB (epoch: 1653124433) 
+  Commit URL:   [b4642d6] (https://github.com/vision5/ngx_devel_kit/commit/b4642d6ca01011bd8cd30b253f5c3872b384fd21) 
 
  nchan 
   Homepage:     (https://github.com/slact/nchan) 
-  Commit Date:  Tue 28 Dec 2021 01:00:51 AM WIB (epoch: 1640628051) 
-  Commit URL:   [7994951] (https://github.com/slact/nchan/commit/7994951e86a85592b20ff8003891acbb838f6426) 
+  Commit Date:  Wed 16 Nov 2022 07:46:11 AM WIB (epoch: 1668559571) 
+  Commit URL:   [91e8ff5] (https://github.com/slact/nchan/commit/91e8ff5cbd53f65d7c115ba18061ad500c4f0628) 
 
  ngx_accept_language 
   Homepage:     (https://github.com/steamboatid/nginx_accept_language_module) 
-  Commit Date:  Wed 08 Sep 2021 10:38:41 AM WIB (epoch: 1631072321) 
-  Commit URL:   [f76e453] (https://github.com/steamboatid/nginx_accept_language_module/commit/f76e45338cf987babccf989b0b98861304af66bb) 
+  Commit Date:  Sat 10 Sep 2022 04:03:22 PM WIB (epoch: 1662800602) 
+  Commit URL:   [db028c0] (https://github.com/steamboatid/nginx_accept_language_module/commit/db028c0485cdb38cff2d4cb7dcc705f7304c1381) 
 
  ngx_http_auth_pam 
   Homepage:     (https://github.com/sto/ngx_http_auth_pam_module) 
@@ -188,23 +193,28 @@ Total: 43 modules
 
  ngx_sysguard 
   Homepage:     (https://github.com/vozlt/nginx-module-sysguard) 
-  Commit Date:  Tue 21 Mar 2017 03:20:13 PM WIB (epoch: 1490084413) 
-  Commit URL:   [e512897] (https://github.com/vozlt/nginx-module-sysguard/commit/e512897f5aba4f79ccaeeebb51138f1704a58608) 
+  Commit Date:  Tue 06 Sep 2022 08:55:51 PM WIB (epoch: 1662472551) 
+  Commit URL:   [864c491] (https://github.com/vozlt/nginx-module-sysguard/commit/864c491ccfec7a3a5549f0f3d962fca7dee7f620) 
 
  ngx_vts 
   Homepage:     (https://github.com/vozlt/nginx-module-vts) 
-  Commit Date:  Wed 10 Feb 2021 08:39:17 AM WIB (epoch: 1612921157) 
-  Commit URL:   [3c6cf41] (https://github.com/vozlt/nginx-module-vts/commit/3c6cf41315bfcb48c35a3a0be81ddba6d0d01dac) 
+  Commit Date:  Wed 19 Oct 2022 01:45:16 AM WIB (epoch: 1666118716) 
+  Commit URL:   [46e431b] (https://github.com/vozlt/nginx-module-vts/commit/46e431b57f292765dae015c5c43bd34b4763b43b) 
 
  ngx_push_stream 
   Homepage:     (https://github.com/wandenberg/nginx-push-stream-module) 
-  Commit Date:  Sun 12 Dec 2021 02:00:34 AM WIB (epoch: 1639249234) 
-  Commit URL:   [d957d66] (https://github.com/wandenberg/nginx-push-stream-module/commit/d957d66d2e3dd20efd272736318296db72284b9e) 
+  Commit Date:  Tue 28 Jun 2022 04:25:18 AM WIB (epoch: 1656365118) 
+  Commit URL:   [8c02220] (https://github.com/wandenberg/nginx-push-stream-module/commit/8c02220d484d7848bc8e3a6d9b1c616987e86f66) 
+
+ naxsi 
+  Homepage:     (https://github.com/wargio/naxsi) 
+  Commit Date:  Mon 21 Nov 2022 06:08:24 PM WIB (epoch: 1669028904) 
+  Commit URL:   [bd4ded9] (https://github.com/wargio/naxsi/commit/bd4ded9a3fdc43d322f98fe9abafbf2fdd4864a6) 
 
  ngx_upsync 
   Homepage:     (https://github.com/weibocom/nginx-upsync-module) 
-  Commit Date:  Wed 07 Oct 2020 07:48:29 PM WIB (epoch: 1602074909) 
-  Commit URL:   [63733af] (https://github.com/weibocom/nginx-upsync-module/commit/63733af4cce877c986f08b3b5aa85a7a6a3cd143) 
+  Commit Date:  Tue 24 May 2022 01:10:12 PM WIB (epoch: 1653372612) 
+  Commit URL:   [579bc8f] (https://github.com/weibocom/nginx-upsync-module/commit/579bc8f66094f002d33a79ad7bc273ffdfb7d7ed) 
 
  ngx_stream_upsync 
   Homepage:     (https://github.com/xiaokai-wang/nginx-stream-upsync-module) 
@@ -213,13 +223,13 @@ Total: 43 modules
 
  ngx_upstream_check 
   Homepage:     (https://github.com/yaoweibin/nginx_upstream_check_module) 
-  Commit Date:  Sat 07 Aug 2021 08:08:57 PM WIB (epoch: 1628341737) 
-  Commit URL:   [e85752f] (https://github.com/yaoweibin/nginx_upstream_check_module/commit/e85752f0b9bd848f7917e02275da4013566f34d8) 
+  Commit Date:  Sun 06 Nov 2022 11:37:08 AM WIB (epoch: 1667709428) 
+  Commit URL:   [87bfa66] (https://github.com/yaoweibin/nginx_upstream_check_module/commit/87bfa66ddf16c17053ba7bbae72400c9939ecf6d) 
 
  ngx_http_substitutions_filter 
   Homepage:     (https://github.com/yaoweibin/ngx_http_substitutions_filter_module) 
-  Commit Date:  Tue 28 Dec 2021 08:17:32 PM WIB (epoch: 1640697452) 
-  Commit URL:   [c6f825f] (https://github.com/yaoweibin/ngx_http_substitutions_filter_module/commit/c6f825fa592acc29275c2eb4d1ab1eccab9de19e) 
+  Commit Date:  Mon 24 Jan 2022 08:04:16 AM WIB (epoch: 1642986256) 
+  Commit URL:   [e12e965] (https://github.com/yaoweibin/ngx_http_substitutions_filter_module/commit/e12e965ac1837ca709709f9a26f572a54d83430e) 
 
 
 

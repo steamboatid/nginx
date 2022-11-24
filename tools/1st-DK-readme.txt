@@ -10,9 +10,15 @@ e. upgrading / bug fixing main repo
 
 A. HOW TO ADD DYNAMIC MODULES:
 - put source at debian/modules
+	modify tools/update-modules.sh
+	edit module-*/config
+	domeld ~/github/nginx/debian/modules ~/github/nginx-modules
+	cd ~/github/nginx; /bin/bash tools/zbuild.sh
+
 - get {module_name} from debian/modules/{module_folder}/source/config
 - create debian/libnginx-mod-{module_name}.nginx
 - chmod +x debian/libnginx-mod-{module_name}.nginx
+- chmod +x debian/libnginx-mod-*.nginx -fv
 - create debian/libnginx-mod.conf/mod-{module_name}.conf
 - add config debian/control
 - add config debian/rules

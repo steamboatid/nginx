@@ -1,4 +1,10 @@
-ngx_addon_name="ngx_js_module"
+#
+# this file is modified by dk
+#
+#------------------------------------------------------------------------------
+
+
+ngx_addon_name="ngx_http_js_module"
 
 NJS_DEPS="$ngx_addon_dir/ngx_js.h \
     $ngx_addon_dir/ngx_js_fetch.h"

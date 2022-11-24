@@ -175,7 +175,7 @@ update_rename "kvspb/nginx-auth-ldap" "http-auth-ldap"  >/dev/null 2>&1 &
 # https://github.com/vozlt/nginx-module-vts
 update_rename "vozlt/nginx-module-vts" "http-vhost-traffic-status"  >/dev/null 2>&1 &
 
-# http://github.com/nginx/njs
+# https://github.com/nginx/njs
 update_only "nginx/njs"  >/dev/null 2>&1 &
 
 # https://github.com/google/ngx_brotli
@@ -259,7 +259,8 @@ update_rename "repsheet/ngx_bot_verifier" "http-bot-verifier"  >/dev/null 2>&1 &
 # https://github.com/themagister/Nginx-DOH-Module "http-doh"
 update_rename "themagister/Nginx-DOH-Module" "http-doh"  >/dev/null 2>&1 &
 
-
+# https://github.com/dvershinin/ngx_dynamic_etag "http-dynamic-etag"
+update_rename "dvershinin/ngx_dynamic_etag" "http-dynamic-etag"  >/dev/null 2>&1 &
 
 
 #update_rename "" ""
@@ -274,7 +275,7 @@ grep -i "error\|warning\|fatal" * | grep -iv "is now" | sort -u
 
 printf "\n\n --- done \n"
 
-# https://github.com/xiaokai-wang/nginx_upstream_check_module
+# --- https://github.com/xiaokai-wang/nginx_upstream_check_module
 
 
 cd $BASEDIR

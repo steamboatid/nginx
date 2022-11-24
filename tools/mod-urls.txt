@@ -6,6 +6,7 @@ https://github.com/aperezdc/ngx-fancyindex
 https://github.com/arut/nginx-dav-ext-module
 https://github.com/arut/nginx-rtmp-module
 https://github.com/bpaquet/ngx_http_enhanced_memcached_module
+https://github.com/dvershinin/ngx_dynamic_etag
 https://github.com/dvershinin/ngx_slowfs_cache
 https://github.com/dvershinin/ngx_webp
 https://github.com/FRiCKLE/ngx_cache_purge
@@ -18,7 +19,6 @@ https://github.com/grahamedgecombe/nginx-ct
 https://github.com/kvspb/nginx-auth-ldap
 https://github.com/kyprizel/testcookie-nginx-module
 https://github.com/leev/ngx_http_geoip2_module
-https://github.com/libinjection/libinjection
 https://github.com/masterzen/nginx-upload-progress-module
 https://github.com/nbs-system/naxsi
 https://github.com/nginx/njs
@@ -35,10 +35,10 @@ https://github.com/slact/nchan
 https://github.com/steamboatid/nginx_accept_language_module
 https://github.com/sto/ngx_http_auth_pam_module
 https://github.com/themagister/Nginx-DOH-Module
-https://github.com/troydhanson/uthash
 https://github.com/vozlt/nginx-module-sysguard
 https://github.com/vozlt/nginx-module-vts
 https://github.com/wandenberg/nginx-push-stream-module
+https://github.com/wargio/naxsi
 https://github.com/weibocom/nginx-upsync-module
 https://github.com/xiaokai-wang/nginx-stream-upsync-module
 https://github.com/yaoweibin/nginx_upstream_check_module

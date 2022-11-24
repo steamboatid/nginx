@@ -1,0 +1,121 @@
+!releng
+!debian/modules/http-waf/inc/libinjection/misc/*
+!.clang-format
+
+# pyc
+*.pyc
+
+# Compiled Object files
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.la
+*.a
+
+# Compiled misc
+*.dep
+*.gcda
+*.gcno
+*.gcov
+
+# Packages
+*.tar.gz
+*.tar.bz2
+
+# Logs
+*.log
+
+# Temporary
+*.swp
+*.~
+*.project
+*.cproject
+
+# Autotools
+.deps
+.libs
+
+/aclocal.m4
+/autom4te.cache
+/stamp-h1
+/autoscan.log
+/libtool
+
+# The .clang-format.example file may be copied here for use with -style=file
+#.clang-format
+
+test_all
+*.trs
+tags
+
+.vscode
+.vscode/*
+
+# netbeans project
+#===========================================================================
+nbproject
+nbproject/*
+*.bak
+*bak
+
+# debian packaging
+/debian/.debhelper/*/*
+debian/.debhelper/*/*
+debian/.debhelper/*
+debian/.debhelper
+
+# https://github.com/phusion/debian-packaging-for-the-modern-developer/blob/master/.gitignore
+.DS_Store
+.debhelper
+*.debhelper
+# *.cache
+# *.cache/*
+*.deb
+*.dsc
+*.build
+*.buildinfo
+*.changes
+*.tar.gz
+*.log
+*.substvars
+
+# Ignore generated files
+/*.deb
+/*.dsc
+/*.changes
+/*.build
+/*.buildinfo
+/*.tar.gz
+/*.tgz
+/*.bz2
+/*.zip
+
+# Ignore files generated during build
+# https://github.com/vincentbernat/pragmatic-debian-packages/blob/master/.gitignore
+debian/files
+debian/*.substvars
+debian/*.log
+debian/.debhelper/*
+debian/*.debhelper
+debian/*-stamp
+debian/*.after
+debian/*.before
+# debian/nginx-*/*
+# debian/libnginx-mod-*/*
+# debian/build-*/*
+
+/*/debian/files
+/*/debian/*.substvars
+/*/debian/*.log
+/*/debian/.debhelper/*
+/*/debian/*.debhelper
+/*/debian/*-stamp
+/*/debian/*.after
+/*/debian/*.before
+# /*/debian/nginx-*/*
+# /*/debian/libnginx-mod-*/*
+# /*/debian/build-*/*

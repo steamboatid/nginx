@@ -100,6 +100,8 @@ droot=$(realpath "$base/..")
 readme_file="$droot/debian/modules/README.Modules-versions"
 prepare_readme "$readme_file" "$base"
 
+# update mod-urls.txt
+cat update-modules.sh | grep '# http' | tr -d "\t" | awk '{print $2}' | sort -u > mod-urls.txt
 
 for aurl in $(cat $base/mod-urls.txt | sort); do
 	[[ $aurl == *"uthash"* ]] && continue;

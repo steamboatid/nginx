@@ -1,4 +1,4 @@
-﻿= Name =
+= Name =
 
 '''nginx_http_upstream_check_module''' - support upstream health check with Nginx
 

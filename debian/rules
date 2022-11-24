@@ -30,12 +30,13 @@ openssl_ver:=$(shell openssl version | cut -d' ' -f2)
 # http-lua \
 # stream-lua \
 #	http-waf \
-# http-js \
-# stream-js
-# http-upsync \
-# stream-upsync \
-#	ssl-ct
 #	http-uploadprogress \
+
+#	http-js \
+#	stream-js \
+#	http-upsync \
+#	stream-upsync \
+#	ssl-ct
 
 
 FLAVOURS := core full light extras static
@@ -78,6 +79,7 @@ DYN_MODS := \
 	http-srcache-filter \
 	http-slowfs \
 	http-webp \
+	http-dynamic-etag \
 	http-immutable \
 	http-security-headers \
 	http-bot-verifier \
@@ -253,25 +255,28 @@ extras_configure_flags := \
 			--add-dynamic-module=$(MODULESDIR)/http-sysguard \
 			--add-dynamic-module=$(MODULESDIR)/http-testcookie-access \
 			--add-dynamic-module=$(MODULESDIR)/http-webp \
+			--add-dynamic-module=$(MODULESDIR)/http-dynamic-etag \
 			\
-			--add-dynamic-module=$(MODULESDIR)/http-geoip2
+			--add-dynamic-module=$(MODULESDIR)/http-geoip2 \
+			\
+			--add-dynamic-module=$(MODULESDIR)/ssl-ct \
+			--add-dynamic-module=$(MODULESDIR)/http-upsync \
+			--add-dynamic-module=$(MODULESDIR)/stream-upsync
 
 
 
-#	--add-dynamic-module=$(MODULESDIR)/http-uploadprogress \
+#			--add-dynamic-module=$(MODULESDIR)/njs/nginx
 
-#	--add-dynamic-module=$(MODULESDIR)/ssl-ct \
-#	--add-module=$(MODULESDIR)/http-upsync \
-#	--add-module=$(MODULESDIR)/stream-upsync
-#	--add-module=$(MODULESDIR)/njs/nginx
 
-#	--add-module=$(MODULESDIR)/http-waf \
-#	--add-module=$(MODULESDIR)/ssl-ct \
-#	--add-module=$(MODULESDIR)/http-upsync \
-#	--add-module=$(MODULESDIR)/stream-upsync \
-#	--add-module=$(MODULESDIR)/njs/nginx \
-# --add-dynamic-module=$(MODULESDIR)/http-lua \
-# --add-dynamic-module=$(MODULESDIR)/stream-lua \
+#			--add-dynamic-module=$(MODULESDIR)/http-uploadprogress \
+#			--add-dynamic-module=$(MODULESDIR)/http-waf \
+#			--add-dynamic-module=$(MODULESDIR)/http-lua \
+#			--add-dynamic-module=$(MODULESDIR)/stream-lua \
+
+#			--add-module=$(MODULESDIR)/ssl-ct \
+#			--add-module=$(MODULESDIR)/http-upsync \
+#			--add-module=$(MODULESDIR)/stream-upsync \
+#			--add-module=$(MODULESDIR)/njs/nginx \
 
 
 
@@ -333,6 +338,7 @@ static_configure_flags := \
 			--add-module=$(MODULESDIR)/http-testcookie-access \
 			--add-module=$(MODULESDIR)/http-upstream-check \
 			--add-module=$(MODULESDIR)/http-webp \
+			--add-module=$(MODULESDIR)/http-dynamic-etag \
 			\
 			--add-module=$(MODULESDIR)/ssl-ct \
 			--add-module=$(MODULESDIR)/http-geoip2 \
